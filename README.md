@@ -1,6 +1,6 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Renovation estimator
 
-## Про приложение
+### Установка приложения
 
 На борту контейнер с 4 сервисами:
 1. sail-8.4 (php 8.4 + laravel 12)<br>
@@ -68,4 +68,4 @@ npm run test:unit</code></pre>
 закомментирую строку
 <pre><code>command: ["node", "-e", "console.log('Node 22 is running'); setInterval(() => {}, 1000); "]</code></pre>
 
-#### Теперь все готово, можно начинать делать свой крутой проект!
+#### все готово! 
