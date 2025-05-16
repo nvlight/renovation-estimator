@@ -1,0 +1,27 @@
+name: Manual workflow with custom action
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  create-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Hello Action
+        uses: ./.github/actions/hello-action
+        with:
+          name: 'Developer'
+          file-to-check: 'composer.json'

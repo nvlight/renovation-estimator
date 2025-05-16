@@ -1,0 +1,22 @@
+name: Manual workflow with success
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print environment
+        run: echo "Running on ${{ inputs.environment }}"

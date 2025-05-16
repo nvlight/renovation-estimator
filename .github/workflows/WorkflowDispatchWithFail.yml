@@ -1,0 +1,33 @@
+name: Manual workflow with fail
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  job1-print:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print environment
+        run: echo "Running job1-print on ${{ inputs.environment }}"
+
+  job2-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print current date and time
+        run: echo "Running job2-date on ${{ inputs.environment }}"
+
+  job3-fail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Force failure
+        run: exit 1

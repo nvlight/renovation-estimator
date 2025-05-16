@@ -1,0 +1,29 @@
+name: Manual workflow with create artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  create-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a file
+        run: |
+          echo "This is a sample artifact for ${{ inputs.environment }}" > artifact.txt
+          echo "Generated on: $(date)" >> artifact.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-artifact
+          path: artifact.txt

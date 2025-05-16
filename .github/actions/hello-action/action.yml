@@ -1,0 +1,28 @@
+name: 'Hello Action'
+description: 'A simple action that prints a greeting and checks for a file'
+inputs:
+  name:
+    description: 'Name to greet'
+    required: true
+    default: 'User'
+  file-to-check:
+    description: 'File to check existence'
+    required: false
+    default: 'README.md'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Print greeting
+      run: echo "Hello, ${{ inputs.name }}!"
+      shell: bash
+
+    - name: Check file existence
+      run: |
+        if [ -f "${{ inputs.file-to-check }}" ]; then
+          echo "File ${{ inputs.file-to-check }} exists!"
+        else
+          echo "File ${{ inputs.file-to-check }} does not exist!"
+          exit 1
+        fi
+      shell: bash
