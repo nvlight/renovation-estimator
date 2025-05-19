@@ -5,7 +5,7 @@ import { api } from '@/boot/axios.js'; // алиас @ сработал посл
 export const useAuthStore = defineStore('auth', {
   // Состояние: пользователь и токен
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('auth_token') || null, // Сохраняем токен в localStorage
   }),
 
@@ -45,6 +45,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = user;
         this.token = token;
         localStorage.setItem('auth_token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         return response.data;
@@ -60,6 +61,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null;
         this.token = null;
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
         delete api.defaults.headers.common['Authorization'];
 
         return { message: 'Logged out' };

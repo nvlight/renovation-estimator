@@ -38,7 +38,7 @@ const routes = [
   // Обработка 404
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('@/pages/ErrorNotFound.vue'),
   },
 ];
 
