@@ -23,6 +23,8 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $this->faker->locale = 'ru_RU'; // Русские имена и email
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
