@@ -33,13 +33,26 @@
               Created: {{ formatDate(project.created) }}
             </q-item-label>
           </q-item-section>
+
           <q-item-section side>
-            <q-btn flat icon="visibility" color="grey-7" @click="openViewProjectDialog(project)" />
-            <q-btn flat icon="edit" color="primary" @click="openEditProjectDialog(project)" />
-            <q-btn flat icon="delete" color="negative" @click="confirmDeleteProject(project.id, project.name)" />
+            <q-btn flat icon="visibility" color="grey-7" @click="openViewProjectDialog(project)"/>
+            <q-btn flat icon="edit" color="primary" @click="openEditProjectDialog(project)"/>
+            <q-btn flat icon="delete" color="negative" @click="confirmDeleteProject(project.id, project.name)"/>
           </q-item-section>
         </q-item>
       </q-list>
+
+      <!-- Пагинация -->
+      <div class="q-mt-md flex justify-center">
+        <q-pagination
+          v-model="currentPage"
+          :max="projectsStore.pagination.lastPage"
+          :direction-links="true"
+          :boundary-links="true"
+          color="primary"
+          @update:model-value="loadProjects"
+        />
+      </div>
     </div>
     <div v-else class="text-center q-mt-md">
       <q-spinner color="primary" size="3em"/>
@@ -75,8 +88,8 @@
               class="q-mb-md"
             />
             <q-card-actions align="right">
-              <q-btn label="Cancel" color="negative" flat @click="showAddProjectDialog = false" />
-              <q-btn label="Save" type="submit" color="primary" :disable="!newProject.name" />
+              <q-btn label="Cancel" color="negative" flat @click="showAddProjectDialog = false"/>
+              <q-btn label="Save" type="submit" color="primary" :disable="!newProject.name"/>
             </q-card-actions>
           </q-form>
         </q-card-section>
@@ -112,8 +125,8 @@
               class="q-mb-md"
             />
             <q-card-actions align="right">
-              <q-btn label="Cancel" color="negative" flat @click="showEditProjectDialog = false" />
-              <q-btn label="Save" type="submit" color="primary" :disable="!editProjectData.name" />
+              <q-btn label="Cancel" color="negative" flat @click="showEditProjectDialog = false"/>
+              <q-btn label="Save" type="submit" color="primary" :disable="!editProjectData.name"/>
             </q-card-actions>
           </q-form>
         </q-card-section>
@@ -141,7 +154,7 @@
           </q-item-label>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn label="Close" color="primary" flat @click="showViewProjectDialog = false" />
+          <q-btn label="Close" color="primary" flat @click="showViewProjectDialog = false"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -156,8 +169,8 @@
           Are you sure you want to delete the project "{{ deleteProjectName }}"?
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn label="Cancel" color="negative" flat @click="showDeleteConfirmDialog = false" />
-          <q-btn label="Delete" color="primary" @click="deleteProject" />
+          <q-btn label="Cancel" color="negative" flat @click="showDeleteConfirmDialog = false"/>
+          <q-btn label="Delete" color="primary" @click="deleteProject"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -167,9 +180,9 @@
 <script setup>
 import {useAuthStore} from '@/stores/auth';
 import {useProjectsStore} from '@/stores/projects';
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import {date} from 'quasar'; // Импортируем утилиту для форматирования даты
-import { Notify } from 'quasar';
+import {Notify} from 'quasar';
 
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
@@ -205,6 +218,15 @@ const showDeleteConfirmDialog = ref(false);
 const deleteProjectId = ref(null);
 const deleteProjectName = ref('');
 
+// Инициализация текущей страницы из localStorage
+const currentPage = ref(parseInt(localStorage.getItem('projectsPage')) || 1);
+
+// Сохранение текущей страницы в localStorage при изменении
+watch(currentPage, (newPage) => {
+  localStorage.setItem('projectsPage', newPage);
+});
+
+
 // Форматирование даты
 const formatDate = (timestamp) => {
   return date.formatDate(timestamp, 'DD MMMM YYYY, HH:mm'); // Формат, например, "20 May 2025, 12:11"
@@ -215,13 +237,27 @@ authStore.initializeAuth();
 
 async function loadData() {
   try {
-    await projectsStore.loadProjects();
+    await projectsStore.loadProjects(currentPage.value);
   } catch (error) {
     errorMessage.value = error.message || 'Failed to load projects';
   }
 }
 
 loadData();
+
+// Загрузка проектов при смене страницы
+async function loadProjects(page) {
+  currentPage.value = page;
+  try {
+    await projectsStore.loadProjects(page);
+  } catch (error) {
+    errorMessage.value = error.message || 'Failed to load projects';
+    Notify.create({
+      type: 'negative',
+      message: errorMessage.value,
+    });
+  }
+}
 
 // Открытие диалога редактирования
 function openEditProjectDialog(project) {
@@ -238,10 +274,12 @@ function openEditProjectDialog(project) {
 async function addProject() {
   try {
     const response = await projectsStore.addProject(newProject.value);
-    if (response){
+    if (response) {
       showAddProjectDialog.value = false; // Закрываем диалог
-      newProject.value = { name: '', description: '', place_name: '' }; // Сбрасываем форму
+      newProject.value = {name: '', description: '', place_name: ''}; // Сбрасываем форму
       projectForm.value.resetValidation(); // Сбрасываем валидацию
+
+      await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
     }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Failed to add project';
@@ -269,7 +307,7 @@ async function editProject() {
       place_name: editProjectData.value.place_name,
     });
     showEditProjectDialog.value = false;
-    editProjectData.value = { id: null, name: '', description: '', place_name: '' };
+    editProjectData.value = {id: null, name: '', description: '', place_name: ''};
     editProjectForm.value.resetValidation();
     Notify.create({
       type: 'positive',
@@ -298,6 +336,13 @@ async function deleteProject() {
     showDeleteConfirmDialog.value = false;
     deleteProjectId.value = null;
     deleteProjectName.value = '';
+
+    // если на текущей странице не осталось элементов
+    if (!projectsStore.projects.length && currentPage.value > 1) {
+      currentPage.value -= 1; // Переходим на предыдущую страницу
+    }
+
+    await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
     Notify.create({
       type: 'positive',
       message: 'Project deleted successfully!',

@@ -6,6 +6,11 @@ export const useProjectsStore = defineStore('projects', {
   state: () => ({
     projects: [],
     currentProjectId: null,
+    pagination: {
+      currentPage: 1,
+      lastPage: 1,
+      perPage: 10, // Значение по умолчанию, можно настроить
+    },
   }),
 
   // Геттеры
@@ -16,16 +21,20 @@ export const useProjectsStore = defineStore('projects', {
   // Действия
   actions: {
     // Логин
-    async loadProjects() {
+    async loadProjects(page = 1, perPage = 10) {
       try {
-        const response = await api.get('/v1/projects');
-
-        const {data} = response.data;
-        this.projects = data;
-
-        return data;
+        const response = await api.get('/v1/projects', {
+          params: { page, per_page: perPage },
+        });
+        this.projects = response.data.data; // Данные проектов
+        this.pagination = {
+          currentPage: response.data.meta.current_page,
+          lastPage: response.data.meta.last_page,
+          perPage: response.data.meta.per_page,
+        };
+        return response.data;
       } catch (error) {
-        throw error.response?.data || {message: 'load projects failed'};
+        throw error.response?.data || { message: 'Load projects failed' };
       }
     },
     async editProject(projectId, projectData) {
