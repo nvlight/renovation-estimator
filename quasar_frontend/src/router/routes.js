@@ -27,6 +27,12 @@ const routes = [
         meta: { requiresAuth: true }, // Только для аутентифицированных
       },
       {
+        path: 'projects',
+        name: 'Projects',
+        component: () => import('@/pages/ProjectsPage.vue'),
+        meta: { requiresAuth: true }, // Только для аутентифицированных
+      },
+      {
         path: 'test-css',
         name: 'TestCss',
         component: () => import('@/pages/TestCssPage.vue'),
