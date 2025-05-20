@@ -34,6 +34,7 @@
             </q-item-label>
           </q-item-section>
           <q-item-section side>
+            <q-btn flat icon="visibility" color="grey-7" @click="openViewProjectDialog(project)" />
             <q-btn flat icon="edit" color="primary" @click="openEditProjectDialog(project)" />
             <q-btn flat icon="delete" color="negative" @click="confirmDeleteProject(project.id, project.name)" />
           </q-item-section>
@@ -119,6 +120,32 @@
       </q-card>
     </q-dialog>
 
+    <!-- Модальное окно для просмотра проекта -->
+    <q-dialog v-model="showViewProjectDialog">
+      <q-card style="width: 500px; max-width: 90vw;">
+        <q-card-section>
+          <div class="text-h6">View Project</div>
+        </q-card-section>
+        <q-card-section>
+          <q-item-label class="q-mb-md">
+            <strong>Name:</strong> {{ viewProjectData.name }}
+          </q-item-label>
+          <q-item-label class="q-mb-md">
+            <strong>Description:</strong> {{ viewProjectData.description || 'No description' }}
+          </q-item-label>
+          <q-item-label class="q-mb-md">
+            <strong>Place Name:</strong> {{ viewProjectData.place_name || 'Not specified' }}
+          </q-item-label>
+          <q-item-label>
+            <strong>Created:</strong> {{ formatDate(viewProjectData.created) }}
+          </q-item-label>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn label="Close" color="primary" flat @click="showViewProjectDialog = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- Модальное окно для подтверждения удаления -->
     <q-dialog v-model="showDeleteConfirmDialog">
       <q-card>
@@ -165,6 +192,15 @@ const editProjectData = ref({
 });
 const editProjectForm = ref(null);
 
+const showViewProjectDialog = ref(false);
+const viewProjectData = ref({
+  id: null,
+  name: '',
+  description: '',
+  place_name: '',
+  created: '',
+});
+
 const showDeleteConfirmDialog = ref(false);
 const deleteProjectId = ref(null);
 const deleteProjectName = ref('');
@@ -210,6 +246,18 @@ async function addProject() {
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Failed to add project';
   }
+}
+
+// Открытие диалога просмотра
+function openViewProjectDialog(project) {
+  viewProjectData.value = {
+    id: project.id,
+    name: project.name,
+    description: project.description || '',
+    place_name: project.place_name || '',
+    created: project.created,
+  };
+  showViewProjectDialog.value = true;
 }
 
 // Редактирование проекта
