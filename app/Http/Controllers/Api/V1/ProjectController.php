@@ -23,6 +23,7 @@ class ProjectController extends Controller
     {
         $projects = Auth::user()
             ->projects()
+            ->orderBy('created', 'desc')
             ->paginate($request->get('per_page', Project::PER_PAGE));
 
         return ProjectResource::collection($projects)->response();
@@ -40,6 +41,7 @@ class ProjectController extends Controller
             'place_name' => $request->place_name,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
+            'created' => now(),
         ]);
 
         return response()->json(new ProjectResource($project), 201);
@@ -62,7 +64,7 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $project->update($request->validated());
+        $project->update($request->validated() + ['created' => now()]);
 
         return response()->json(new ProjectResource($project));
     }

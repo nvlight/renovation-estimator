@@ -18,7 +18,7 @@ export const useProjectsStore = defineStore('projects', {
     // Логин
     async loadProjects() {
       try {
-        const response = await api.get('/v2/projects');
+        const response = await api.get('/v1/projects');
 
         const {data} = response.data;
         this.projects = data;
@@ -28,12 +28,40 @@ export const useProjectsStore = defineStore('projects', {
         throw error.response?.data || {message: 'load projects failed'};
       }
     },
-    editProject(projectId) {
-      console.log('edit: ', projectId);
+    async editProject(projectId, projectData) {
+      try {
+        const response = await api.patch(`/v1/projects/${projectId}`, projectData);
+        this.projects = this.projects.map(project =>
+          project.id === projectId ? { ...project, ...response.data } : project
+        );
+        return response;
+      } catch (error) {
+        throw error.response?.data || { message: 'Failed to update project' };
+      }
     },
-    deleteProject(projectId) {
-      console.log('delete: ', projectId);
+    async deleteProject(projectId) {
+      try {
+        const deleted = await api.delete('/v1/projects/' + projectId);
+        if (deleted) {
+          this.projects = this.projects.filter(pr => pr.id !== projectId);
+        }
+        return true;
+      } catch (error) {
+        throw error.response?.data || {message: 'load projects failed'};
+      }
     },
+    async addProject(projectData) {
+      try {
+        const addProject = await api.post('/v1/projects/', projectData);
+        if (addProject) {
+          this.projects.unshift(addProject.data);
+        }
+        return addProject;
+      } catch (error) {
+        throw error.response || {message: 'add projects failed'};
+      }
+    },
+
   },
 });
 

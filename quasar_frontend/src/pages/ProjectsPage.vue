@@ -1,6 +1,16 @@
 <template>
   <q-page class="q-pa-md">
-    <h3>Projects</h3>
+    <div class="row items-center q-mb-md">
+      <h3 class="q-my-none">Projects</h3>
+      <q-btn
+        color="primary"
+        icon="add"
+        label="Add Project"
+        class="q-ml-auto"
+        @click="showAddProjectDialog = true"
+      />
+    </div>
+
     <div v-if="errorMessage" class="text-negative q-mb-md">
       {{ errorMessage }}
     </div>
@@ -24,8 +34,8 @@
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-btn flat icon="edit" color="primary" @click="projectsStore.editProject(project.id)" />
-            <q-btn flat icon="delete" color="negative" @click="projectsStore.deleteProject(project.id)" />
+            <q-btn flat icon="edit" color="primary" @click="openEditProjectDialog(project)" />
+            <q-btn flat icon="delete" color="negative" @click="confirmDeleteProject(project.id, project.name)" />
           </q-item-section>
         </q-item>
       </q-list>
@@ -34,6 +44,96 @@
       <q-spinner color="primary" size="3em"/>
       <div>Loading projects...</div>
     </div>
+
+    <!-- Модальное окно для добавления проекта -->
+    <q-dialog v-model="showAddProjectDialog">
+      <q-card style="width: 500px; max-width: 90vw;">
+        <q-card-section>
+          <div class="text-h6">Add New Project</div>
+        </q-card-section>
+        <q-card-section>
+          <q-form @submit="addProject" ref="projectForm">
+            <q-input
+              v-model="newProject.name"
+              label="Project Name *"
+              :rules="[val => !!val || 'Project name is required']"
+              outlined
+              class="q-mb-md"
+            />
+            <q-input
+              v-model="newProject.description"
+              label="Description"
+              type="textarea"
+              outlined
+              class="q-mb-md"
+            />
+            <q-input
+              v-model="newProject.place_name"
+              label="Place Name"
+              outlined
+              class="q-mb-md"
+            />
+            <q-card-actions align="right">
+              <q-btn label="Cancel" color="negative" flat @click="showAddProjectDialog = false" />
+              <q-btn label="Save" type="submit" color="primary" :disable="!newProject.name" />
+            </q-card-actions>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Модальное окно для редактирования проекта -->
+    <q-dialog v-model="showEditProjectDialog">
+      <q-card style="width: 500px; max-width: 90vw;">
+        <q-card-section>
+          <div class="text-h6">Edit Project</div>
+        </q-card-section>
+        <q-card-section>
+          <q-form @submit="editProject" ref="editProjectForm">
+            <q-input
+              v-model="editProjectData.name"
+              label="Project Name *"
+              :rules="[val => !!val || 'Project name is required']"
+              outlined
+              class="q-mb-md"
+            />
+            <q-input
+              v-model="editProjectData.description"
+              label="Description"
+              type="textarea"
+              outlined
+              class="q-mb-md"
+            />
+            <q-input
+              v-model="editProjectData.place_name"
+              label="Place Name"
+              outlined
+              class="q-mb-md"
+            />
+            <q-card-actions align="right">
+              <q-btn label="Cancel" color="negative" flat @click="showEditProjectDialog = false" />
+              <q-btn label="Save" type="submit" color="primary" :disable="!editProjectData.name" />
+            </q-card-actions>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <q-dialog v-model="showDeleteConfirmDialog">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Confirm Deletion</div>
+        </q-card-section>
+        <q-card-section>
+          Are you sure you want to delete the project "{{ deleteProjectName }}"?
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn label="Cancel" color="negative" flat @click="showDeleteConfirmDialog = false" />
+          <q-btn label="Delete" color="primary" @click="deleteProject" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -42,10 +142,32 @@ import {useAuthStore} from '@/stores/auth';
 import {useProjectsStore} from '@/stores/projects';
 import {ref} from "vue";
 import {date} from 'quasar'; // Импортируем утилиту для форматирования даты
+import { Notify } from 'quasar';
 
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
 const errorMessage = ref(null);
+
+const showAddProjectDialog = ref(false);
+const newProject = ref({
+  name: '',
+  description: '',
+  place_name: '',
+});
+const projectForm = ref(null);
+
+const showEditProjectDialog = ref(false);
+const editProjectData = ref({
+  id: null,
+  name: '',
+  description: '',
+  place_name: '',
+});
+const editProjectForm = ref(null);
+
+const showDeleteConfirmDialog = ref(false);
+const deleteProjectId = ref(null);
+const deleteProjectName = ref('');
 
 // Форматирование даты
 const formatDate = (timestamp) => {
@@ -65,6 +187,81 @@ async function loadData() {
 
 loadData();
 
+// Открытие диалога редактирования
+function openEditProjectDialog(project) {
+  editProjectData.value = {
+    id: project.id,
+    name: project.name,
+    description: project.description || '',
+    place_name: project.place_name || '',
+  };
+  showEditProjectDialog.value = true;
+}
+
+// Добавление проекта
+async function addProject() {
+  try {
+    const response = await projectsStore.addProject(newProject.value);
+    if (response){
+      showAddProjectDialog.value = false; // Закрываем диалог
+      newProject.value = { name: '', description: '', place_name: '' }; // Сбрасываем форму
+      projectForm.value.resetValidation(); // Сбрасываем валидацию
+    }
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || 'Failed to add project';
+  }
+}
+
+// Редактирование проекта
+async function editProject() {
+  try {
+    await projectsStore.editProject(editProjectData.value.id, {
+      name: editProjectData.value.name,
+      description: editProjectData.value.description,
+      place_name: editProjectData.value.place_name,
+    });
+    showEditProjectDialog.value = false;
+    editProjectData.value = { id: null, name: '', description: '', place_name: '' };
+    editProjectForm.value.resetValidation();
+    Notify.create({
+      type: 'positive',
+      message: 'Project updated successfully!',
+    });
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || 'Failed to update project';
+    Notify.create({
+      type: 'negative',
+      message: errorMessage.value,
+    });
+  }
+}
+
+// Подтверждение удаления
+function confirmDeleteProject(projectId, projectName) {
+  deleteProjectId.value = projectId;
+  deleteProjectName.value = projectName;
+  showDeleteConfirmDialog.value = true;
+}
+
+// Удаление проекта
+async function deleteProject() {
+  try {
+    await projectsStore.deleteProject(deleteProjectId.value);
+    showDeleteConfirmDialog.value = false;
+    deleteProjectId.value = null;
+    deleteProjectName.value = '';
+    Notify.create({
+      type: 'positive',
+      message: 'Project deleted successfully!',
+    });
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || 'Failed to delete project';
+    Notify.create({
+      type: 'negative',
+      message: errorMessage.value,
+    });
+  }
+}
 </script>
 
 <style scoped>
