@@ -67,6 +67,7 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         $project->update($request->validated() + ['created' => now()]);
+        sleep(1);
 
         return response()->json(new ProjectResource($project));
     }

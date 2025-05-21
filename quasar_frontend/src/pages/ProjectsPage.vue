@@ -123,7 +123,6 @@
               </template>
               </q-btn>
 
-
             </q-card-actions>
 
           </q-form>
@@ -159,9 +158,35 @@
               outlined
               class="q-mb-md"
             />
+
+            <div v-if="updateProjectErrorMessage" class="text-negative q-mb-md">
+              Ошибка, попробуйте повторить позднее
+            </div>
+
             <q-card-actions align="right">
               <q-btn label="Cancel" color="negative" flat @click="showEditProjectDialog = false"/>
-              <q-btn label="Save" type="submit" color="primary" :disable="!editProjectData.name"/>
+
+              <q-btn
+                type="submit"
+                color="primary"
+                :disable="!editProjectData.name || isProjectUpdating"
+                :loading="false"
+                unelevated
+                class="q-px-sm"
+              >
+                <template v-slot:default>
+                  <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+                    <q-spinner
+                      v-if="isProjectUpdating"
+                      color="white"
+                      size="0.8em"
+                      class="q-mr-xs"
+                    />
+                    <span>Update</span>
+                  </div>
+                </template>
+              </q-btn>
+
             </q-card-actions>
           </q-form>
         </q-card-section>
@@ -223,8 +248,9 @@ const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
 const errorMessage = ref(null);
 const createProjectErrorMessage = ref('');
-//const updateProjectErrorMessage = ref(null);
+const updateProjectErrorMessage = ref('');
 const isProjectStoring = ref(false);
+const isProjectUpdating = ref(false);
 
 const showAddProjectDialog = ref(false);
 const newProject = ref({
@@ -274,6 +300,18 @@ async function loadProjects(page) {
   }
 }
 
+// Открытие диалога просмотра
+function openViewProjectDialog(project) {
+  viewProjectData.value = {
+    id: project.id,
+    name: project.name,
+    description: project.description || '',
+    place_name: project.place_name || '',
+    created: project.created,
+  };
+  showViewProjectDialog.value = true;
+}
+
 // Открытие диалога редактирования
 function openEditProjectDialog(project) {
   editProjectData.value = {
@@ -294,8 +332,14 @@ async function addProject() {
       showAddProjectDialog.value = false; // Закрываем диалог
       newProject.value = {name: '', description: '', place_name: ''}; // Сбрасываем форму
       projectForm.value.resetValidation(); // Сбрасываем валидацию
+
+      Notify.create({
+        type: 'positive',
+        message: 'Project stored successfully!',
+      });
+
+      await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
     }
-    await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
   } catch (error) {
     createProjectErrorMessage.value = error.response?.data?.message || 'Failed to add project';
     console.log('addProject error:', createProjectErrorMessage.value);
@@ -305,39 +349,32 @@ async function addProject() {
   }
 }
 
-// Открытие диалога просмотра
-function openViewProjectDialog(project) {
-  viewProjectData.value = {
-    id: project.id,
-    name: project.name,
-    description: project.description || '',
-    place_name: project.place_name || '',
-    created: project.created,
-  };
-  showViewProjectDialog.value = true;
-}
-
 // Редактирование проекта
 async function editProject() {
   try {
-    await projectsStore.editProject(editProjectData.value.id, {
+    isProjectUpdating.value = true;
+    const response = await projectsStore.editProject(editProjectData.value.id, {
       name: editProjectData.value.name,
       description: editProjectData.value.description,
       place_name: editProjectData.value.place_name,
     });
-    showEditProjectDialog.value = false;
-    editProjectData.value = {id: null, name: '', description: '', place_name: ''};
-    editProjectForm.value.resetValidation();
-    Notify.create({
-      type: 'positive',
-      message: 'Project updated successfully!',
-    });
+
+    if (response){
+      showEditProjectDialog.value = false;
+      editProjectData.value = {id: null, name: '', description: '', place_name: ''};
+      editProjectForm.value.resetValidation();
+
+      Notify.create({
+        type: 'positive',
+        message: 'Project updated successfully!',
+      });
+    }
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to update project';
-    Notify.create({
-      type: 'negative',
-      message: errorMessage.value,
-    });
+    updateProjectErrorMessage.value = error.response?.data?.message || 'Failed to update project';
+    console.log('updateProject error:', updateProjectErrorMessage.value);
+  }
+  finally {
+    isProjectUpdating.value = false;
   }
 }
 
@@ -384,6 +421,13 @@ watch(currentPage, (newPage) => {
 watch(showAddProjectDialog, () => {
   if (showAddProjectDialog.value){
     createProjectErrorMessage.value = '';
+  }
+});
+
+// скрытие текста ошибки при повторном открытии формы редактирования проекта.
+watch(showEditProjectDialog, () => {
+  if (showEditProjectDialog.value){
+    updateProjectErrorMessage.value = '';
   }
 });
 
