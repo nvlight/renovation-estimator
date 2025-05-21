@@ -80,6 +80,7 @@ class ProjectController extends Controller
         $this->authorize('delete', $project);
 
         $project->delete();
+        sleep(1);
 
         return response()->json(['message' => 'Проект удалён']);
     }

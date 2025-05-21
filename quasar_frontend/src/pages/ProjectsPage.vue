@@ -11,11 +11,6 @@
       />
     </div>
 
-    <!-- Ошибки при загрузке проектов -->
-    <div v-if="errorMessage" class="text-negative q-mb-md">
-      Ошибка, попробуйте повторить позднее
-    </div>
-
     <!-- Показ проектов -->
     <div v-if="projectsStore.projects && projectsStore.projects.length">
       <q-list bordered separator class="rounded-borders shadow-2">
@@ -58,8 +53,15 @@
       </div>
     </div>
     <div v-else class="text-center q-mt-md">
-      <q-spinner color="primary" size="3em"/>
-      <div>Loading projects...</div>
+
+      <!-- Ошибки при загрузке проектов -->
+      <div v-if="loadErrorMessage" class="text-negative q-mb-md">
+        Ошибка, попробуйте повторить позднее
+      </div>
+      <div v-else>
+        <q-spinner color="primary" size="3em"/>
+        <div>Loading projects...</div>
+      </div>
     </div>
 
     <!-- Модальное окно для добавления проекта -->
@@ -108,19 +110,19 @@
                 :disable="!newProject.name || isProjectStoring"
                 :loading="false"
                 unelevated
-              class="q-px-sm"
+                class="q-px-sm"
               >
-              <template v-slot:default>
-                <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
-                  <q-spinner
-                    v-if="isProjectStoring"
-                    color="white"
-                    size="0.8em"
-                    class="q-mr-xs"
-                  />
-                  <span>Save</span>
-                </div>
-              </template>
+                <template v-slot:default>
+                  <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+                    <q-spinner
+                      v-if="isProjectStoring"
+                      color="white"
+                      size="0.8em"
+                      class="q-mr-xs"
+                    />
+                    <span>Save</span>
+                  </div>
+                </template>
               </q-btn>
 
             </q-card-actions>
@@ -228,9 +230,38 @@
         <q-card-section>
           Are you sure you want to delete the project "{{ deleteProjectName }}"?
         </q-card-section>
+
+        <q-card-section>
+          <div v-if="deleteProjectErrorMessage" class="text-negative q-mb-md">
+            Ошибка, попробуйте повторить позднее
+          </div>
+        </q-card-section>
+
         <q-card-actions align="right">
           <q-btn label="Cancel" color="negative" flat @click="showDeleteConfirmDialog = false"/>
-          <q-btn label="Delete" color="primary" @click="deleteProject"/>
+          <!--          <q-btn label="Delete" color="primary" @click="deleteProject"/>-->
+
+          <q-btn
+            type="submit"
+            color="primary"
+            :disable="isProjectDeleting"
+            :loading="false"
+            unelevated
+            class="q-px-sm"
+            @click="deleteProject"
+          >
+            <template v-slot:default>
+              <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+                <q-spinner
+                  v-if="isProjectDeleting"
+                  color="white"
+                  size="0.8em"
+                  class="q-mr-xs"
+                />
+                <span>Delete</span>
+              </div>
+            </template>
+          </q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -246,11 +277,14 @@ import {Notify} from 'quasar';
 
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
-const errorMessage = ref(null);
+const loadErrorMessage = ref(null);
+
 const createProjectErrorMessage = ref('');
 const updateProjectErrorMessage = ref('');
+const deleteProjectErrorMessage = ref('');
 const isProjectStoring = ref(false);
 const isProjectUpdating = ref(false);
+const isProjectDeleting = ref(false);
 
 const showAddProjectDialog = ref(false);
 const newProject = ref({
@@ -296,7 +330,7 @@ async function loadProjects(page) {
   try {
     await projectsStore.loadProjects(page);
   } catch (error) {
-    errorMessage.value = error.message || 'Failed to load projects';
+    loadErrorMessage.value = error.message || 'Failed to load projects';
   }
 }
 
@@ -343,8 +377,7 @@ async function addProject() {
   } catch (error) {
     createProjectErrorMessage.value = error.response?.data?.message || 'Failed to add project';
     console.log('addProject error:', createProjectErrorMessage.value);
-  }
-  finally {
+  } finally {
     isProjectStoring.value = false;
   }
 }
@@ -359,7 +392,7 @@ async function editProject() {
       place_name: editProjectData.value.place_name,
     });
 
-    if (response){
+    if (response) {
       showEditProjectDialog.value = false;
       editProjectData.value = {id: null, name: '', description: '', place_name: ''};
       editProjectForm.value.resetValidation();
@@ -372,8 +405,7 @@ async function editProject() {
   } catch (error) {
     updateProjectErrorMessage.value = error.response?.data?.message || 'Failed to update project';
     console.log('updateProject error:', updateProjectErrorMessage.value);
-  }
-  finally {
+  } finally {
     isProjectUpdating.value = false;
   }
 }
@@ -388,27 +420,30 @@ function confirmDeleteProject(projectId, projectName) {
 // Удаление проекта
 async function deleteProject() {
   try {
-    await projectsStore.deleteProject(deleteProjectId.value);
-    showDeleteConfirmDialog.value = false;
-    deleteProjectId.value = null;
-    deleteProjectName.value = '';
+    isProjectDeleting.value = true;
+    const response = await projectsStore.deleteProject(deleteProjectId.value);
+    if (response) {
+      showDeleteConfirmDialog.value = false;
+      deleteProjectId.value = null;
+      deleteProjectName.value = '';
 
-    // если на текущей странице не осталось элементов
-    if (!projectsStore.projects.length && currentPage.value > 1) {
-      currentPage.value -= 1; // Переходим на предыдущую страницу
+      // если на текущей странице не осталось элементов
+      if (!projectsStore.projects.length && currentPage.value > 1) {
+        currentPage.value -= 1; // Переходим на предыдущую страницу
+      }
+
+      Notify.create({
+        type: 'positive',
+        message: 'Project deleted successfully!',
+      });
+
+      await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
     }
-
-    await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
-    Notify.create({
-      type: 'positive',
-      message: 'Project deleted successfully!',
-    });
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to delete project';
-    Notify.create({
-      type: 'negative',
-      message: errorMessage.value,
-    });
+    deleteProjectErrorMessage.value = error.response?.data?.message || 'Failed to delete project';
+    console.log('deleteProject error:', deleteProjectErrorMessage.value);
+  } finally {
+    isProjectDeleting.value = false;
   }
 }
 
@@ -419,15 +454,22 @@ watch(currentPage, (newPage) => {
 
 // скрытие текста ошибки при повторном открытии формы добавления проекта.
 watch(showAddProjectDialog, () => {
-  if (showAddProjectDialog.value){
+  if (showAddProjectDialog.value) {
     createProjectErrorMessage.value = '';
   }
 });
 
 // скрытие текста ошибки при повторном открытии формы редактирования проекта.
 watch(showEditProjectDialog, () => {
-  if (showEditProjectDialog.value){
+  if (showEditProjectDialog.value) {
     updateProjectErrorMessage.value = '';
+  }
+});
+
+// скрытие текста ошибки при повторном открытии формы удаления проекта.
+watch(showDeleteConfirmDialog, () => {
+  if (showDeleteConfirmDialog.value) {
+    deleteProjectErrorMessage.value = '';
   }
 });
 
