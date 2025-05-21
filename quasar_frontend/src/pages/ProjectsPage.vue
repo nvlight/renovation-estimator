@@ -11,8 +11,8 @@
       />
     </div>
 
-    <!-- Показ проектов -->
-    <div v-if="projectsStore.projects && projectsStore.projects.length">
+    <!-- Показ проектов, если они есть  -->
+    <div v-if="!loadErrorMessage && projectsStore.projects.length">
       <q-list bordered separator class="rounded-borders shadow-2">
         <q-item
           v-for="project in projectsStore.projects"
@@ -53,14 +53,14 @@
       </div>
     </div>
     <div v-else class="text-center q-mt-md">
-
-      <!-- Ошибки при загрузке проектов -->
-      <div v-if="loadErrorMessage" class="text-negative q-mb-md">
-        Ошибка, попробуйте повторить позднее
-      </div>
-      <div v-else>
+      <!-- Если ошибок нет, показываю что проекты загружаются -->
+      <div v-if="!loadErrorMessage" class="text-negative q-mb-md">
         <q-spinner color="primary" size="3em"/>
         <div>Loading projects...</div>
+      </div>
+      <!-- Иначе показываю шаблонную ошибку -->
+      <div v-else>
+        Ошибка, попробуйте повторить позднее
       </div>
     </div>
 
