@@ -11,10 +11,13 @@
       />
     </div>
 
+    <!-- Ошибки при загрузке проектов -->
     <div v-if="errorMessage" class="text-negative q-mb-md">
-      {{ errorMessage }}
+      Ошибка, попробуйте повторить позднее
     </div>
-    <div v-else-if="projectsStore.projects && projectsStore.projects.length">
+
+    <!-- Показ проектов -->
+    <div v-if="projectsStore.projects && projectsStore.projects.length">
       <q-list bordered separator class="rounded-borders shadow-2">
         <q-item
           v-for="project in projectsStore.projects"
@@ -87,10 +90,42 @@
               outlined
               class="q-mb-md"
             />
+            <div v-if="createProjectErrorMessage" class="text-negative q-mb-md">
+              Ошибка, попробуйте повторить позднее
+            </div>
+
             <q-card-actions align="right">
-              <q-btn label="Cancel" color="negative" flat @click="showAddProjectDialog = false"/>
-              <q-btn label="Save" type="submit" color="primary" :disable="!newProject.name"/>
+              <q-btn
+                label="Cancel"
+                color="negative"
+                flat
+                @click="showAddProjectDialog = false"
+              />
+
+              <q-btn
+                type="submit"
+                color="primary"
+                :disable="!newProject.name || isProjectStoring"
+                :loading="false"
+                unelevated
+              class="q-px-sm"
+              >
+              <template v-slot:default>
+                <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+                  <q-spinner
+                    v-if="isProjectStoring"
+                    color="white"
+                    size="0.8em"
+                    class="q-mr-xs"
+                  />
+                  <span>Save</span>
+                </div>
+              </template>
+              </q-btn>
+
+
             </q-card-actions>
+
           </q-form>
         </q-card-section>
       </q-card>
@@ -180,13 +215,16 @@
 <script setup>
 import {useAuthStore} from '@/stores/auth';
 import {useProjectsStore} from '@/stores/projects';
-import {ref, watch} from "vue";
+import {ref, watch, onMounted} from "vue";
 import {date} from 'quasar'; // Импортируем утилиту для форматирования даты
 import {Notify} from 'quasar';
 
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
 const errorMessage = ref(null);
+const createProjectErrorMessage = ref('');
+//const updateProjectErrorMessage = ref(null);
+const isProjectStoring = ref(false);
 
 const showAddProjectDialog = ref(false);
 const newProject = ref({
@@ -221,29 +259,10 @@ const deleteProjectName = ref('');
 // Инициализация текущей страницы из localStorage
 const currentPage = ref(parseInt(localStorage.getItem('projectsPage')) || 1);
 
-// Сохранение текущей страницы в localStorage при изменении
-watch(currentPage, (newPage) => {
-  localStorage.setItem('projectsPage', newPage);
-});
-
-
 // Форматирование даты
 const formatDate = (timestamp) => {
   return date.formatDate(timestamp, 'DD MMMM YYYY, HH:mm'); // Формат, например, "20 May 2025, 12:11"
 };
-
-// Инициализируем токен при загрузке
-authStore.initializeAuth();
-
-async function loadData() {
-  try {
-    await projectsStore.loadProjects(currentPage.value);
-  } catch (error) {
-    errorMessage.value = error.message || 'Failed to load projects';
-  }
-}
-
-loadData();
 
 // Загрузка проектов при смене страницы
 async function loadProjects(page) {
@@ -252,10 +271,6 @@ async function loadProjects(page) {
     await projectsStore.loadProjects(page);
   } catch (error) {
     errorMessage.value = error.message || 'Failed to load projects';
-    Notify.create({
-      type: 'negative',
-      message: errorMessage.value,
-    });
   }
 }
 
@@ -273,16 +288,20 @@ function openEditProjectDialog(project) {
 // Добавление проекта
 async function addProject() {
   try {
+    isProjectStoring.value = true;
     const response = await projectsStore.addProject(newProject.value);
     if (response) {
       showAddProjectDialog.value = false; // Закрываем диалог
       newProject.value = {name: '', description: '', place_name: ''}; // Сбрасываем форму
       projectForm.value.resetValidation(); // Сбрасываем валидацию
-
-      await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
     }
+    await projectsStore.loadProjects(currentPage.value); // Перезагружаем текущую страницу
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to add project';
+    createProjectErrorMessage.value = error.response?.data?.message || 'Failed to add project';
+    console.log('addProject error:', createProjectErrorMessage.value);
+  }
+  finally {
+    isProjectStoring.value = false;
   }
 }
 
@@ -355,6 +374,24 @@ async function deleteProject() {
     });
   }
 }
+
+// Сохранение текущей страницы в localStorage при изменении
+watch(currentPage, (newPage) => {
+  localStorage.setItem('projectsPage', newPage);
+});
+
+// скрытие текста ошибки при повторном открытии формы добавления проекта.
+watch(showAddProjectDialog, () => {
+  if (showAddProjectDialog.value){
+    createProjectErrorMessage.value = '';
+  }
+});
+
+onMounted(() => {
+  authStore.initializeAuth(); // Инициализируем токен при загрузке
+  loadProjects(currentPage.value); // Загрузка проектов по текущей странице при загрузке
+})
+
 </script>
 
 <style scoped>
