@@ -5,6 +5,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import LoginPage from '@/pages/LoginPage.vue';
 import { useAuthStore } from '@/stores/auth';
 import { QInput, QForm, QBtn } from 'quasar';
+import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest';
 
 installQuasarPlugin();
 

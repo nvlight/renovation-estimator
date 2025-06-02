@@ -54,12 +54,18 @@
     </div>
     <div v-else class="text-center q-mt-md">
       <!-- Если ошибок нет, показываю что проекты загружаются -->
-      <div v-if="!loadErrorMessage" class="text-negative q-mb-md">
-        <q-spinner color="primary" size="3em"/>
-        <div>Loading projects...</div>
+      <div v-if="!loadErrorMessage" >
+        <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+          <q-spinner
+            size="1em"
+            class="q-mr-xs"
+          />
+          <div>loading ...</div>
+        </div>
+
       </div>
       <!-- Иначе показываю шаблонную ошибку -->
-      <div v-else>
+      <div v-else class="text-negative q-mb-md">
         Ошибка, попробуйте повторить позднее
       </div>
     </div>

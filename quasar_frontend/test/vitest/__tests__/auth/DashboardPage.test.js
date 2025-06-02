@@ -1,10 +1,11 @@
-import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
-import { createTestingPinia } from '@pinia/testing';
-import { useRouter } from 'vue-router';
-import { mount } from '@vue/test-utils';
+import {installQuasarPlugin} from '@quasar/quasar-app-extension-testing-unit-vitest';
+import {createTestingPinia} from '@pinia/testing';
+import {useRouter} from 'vue-router';
+import {mount} from '@vue/test-utils';
 import DashboardPage from '@/pages/DashboardPage.vue';
-import { useAuthStore } from '@/stores/auth';
-import { QBtn } from 'quasar';
+import {useAuthStore} from '@/stores/auth';
+import {QBtn} from 'quasar';
+import { expect, vi, describe, beforeEach, afterEach, it } from 'vitest';
 
 installQuasarPlugin();
 
@@ -20,14 +21,13 @@ describe('DashboardPage', () => {
   let routerPush;
 
   beforeEach(() => {
-    pinia = createTestingPinia({ createSpy: vi.fn });
+    pinia = createTestingPinia({createSpy: vi.fn});
     routerPush = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: routerPush });
+    vi.mocked(useRouter).mockReturnValue({push: routerPush});
 
     wrapper = mount(DashboardPage, {
       global: {
-        plugins: [pinia],
-        components: { QBtn },
+        plugins: [pinia], components: {QBtn},
       },
     });
   });
@@ -38,7 +38,7 @@ describe('DashboardPage', () => {
 
   it('displays welcome message with user name when authenticated', async () => {
     const authStore = useAuthStore(pinia);
-    authStore.currentUser = { name: 'John Doe' };
+    authStore.currentUser = {name: 'John Doe'};
     //await wrapper.vm.$nextTick();
 
     //expect(wrapper.find('p').text()).toBe('Welcome, John Doe!');
