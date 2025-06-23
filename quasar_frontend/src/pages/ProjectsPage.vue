@@ -368,6 +368,7 @@ async function addProject() {
   try {
     isProjectStoring.value = true;
     const response = await projectsStore.addProject(newProject.value);
+    console.log('addProject response:', JSON.stringify(response, null, 2));
     if (response) {
       showAddProjectDialog.value = false; // Закрываем диалог
       newProject.value = {name: '', description: '', place_name: ''}; // Сбрасываем форму

@@ -15,6 +15,8 @@ vi.mock('vue-router', () => ({
   })),
 }));
 
+
+// npm run test:unit DashboardPage.test.js
 describe('DashboardPage', () => {
   let wrapper;
   let pinia;
@@ -33,7 +35,9 @@ describe('DashboardPage', () => {
   });
 
   afterEach(() => {
-    wrapper.unmount();
+    if (wrapper) {
+      wrapper.unmount();
+    }
   });
 
   it('displays welcome message with user name when authenticated', async () => {
@@ -41,7 +45,6 @@ describe('DashboardPage', () => {
     authStore.currentUser = {name: 'John Doe'};
     //await wrapper.vm.$nextTick();
 
-    //expect(wrapper.find('p').text()).toBe('Welcome, John Doe!');
     expect(wrapper.find('p').text()).toBe('Welcome, User!');
   });
 

@@ -13,9 +13,11 @@
         "dev": "quasar dev",
         "build": "quasar build",
         "postinstall": "quasar prepare",
-        "test:unit:ui": "vitest --ui",
+        "test:unit:ui": "vitest --ui --no-open --api.host 0.0.0.0 --logHeapUsage=true",
         "test:unit": "vitest",
-        "test:unit:ci": "vitest run"
+        "test:unit:ci": "vitest run",
+        "bench": "vitest bench",
+        "coverage": "npx vitest --coverage.enabled --coverage.all --no-open --coverage.include=./src/pages "
     },
     "dependencies": {
         "@quasar/extras": "^1.16.4",
@@ -30,6 +32,7 @@
         "@pinia/testing": "^1.0.0",
         "@quasar/app-vite": "^2.1.0",
         "@quasar/quasar-app-extension-testing-unit-vitest": "^1.1.0",
+        "@vitest/coverage-v8": "^2.1.9",
         "@vitest/ui": "^2.0.5",
         "@vue/eslint-config-prettier": "^10.1.0",
         "@vue/test-utils": "^2.4.4",

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
-import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
+import {quasar, transformAssetUrls} from '@quasar/vite-plugin';
 import jsconfigPaths from 'vite-jsconfig-paths';
 import path from 'path';
 
@@ -8,7 +8,7 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'happy-dom', // 'jsdom',
     setupFiles: 'test/vitest/setup-file.js',
     include: [
       // Matches vitest tests in any subfolder of 'src' or into 'test/vitest/__tests__'
@@ -16,14 +16,21 @@ export default defineConfig({
       'src/**/*.vitest.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       'test/vitest/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
+    ui: true, // Включение UI
+    server: {
+      host: '0.0.0.0', // Чтобы UI был доступен извне контейнера
+      port: 51204, // Порт, который вы указали в docker-compose
+    },
   },
   plugins: [
     vue({
-      template: { transformAssetUrls },
+      template: {transformAssetUrls},
     }),
+
     quasar({
       sassVariables: 'src/quasar-variables.scss',
     }),
+
     jsconfigPaths(),
   ],
   resolve: {

@@ -64,11 +64,13 @@ services:
             retries: 3
             timeout: 5s
     quasar-node:
-        image: node:22-alpine
+        image: node:22
+        #image: node:22-alpine
         #user: node
         ports:
-            - '${QUASAR_NODE:-3000}:3000'
             - '${QUASAR_PORT:-9000}:9000'
+            - '${QUASAR_NODE:-3000}:3000'
+            - '${QUASAR_VITEST_UI:-51204}:51204'
         volumes:
             - ./quasar_frontend:/usr/src/app
             #- /usr/src/app/node_modules
