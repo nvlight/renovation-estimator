@@ -13,6 +13,7 @@ return function (Exceptions $exceptions) {
                 $message = match ($model) {
                     'App\\Models\\Project' => 'Проект не найден',
                     'App\\Models\\Room' => 'Комната не найдена',
+                    'App\\Models\\RoomWall' => 'Стена комнаты не найдена',
                     default => 'Ресурс не найден',
                 };
                 return response()->json(['message' => $message], 404);
