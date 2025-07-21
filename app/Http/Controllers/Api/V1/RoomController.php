@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Js;
 
 class RoomController extends Controller
 {
@@ -51,7 +52,7 @@ class RoomController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project, Room $room, ): JsonResponse
+    public function show(Project $project, Room $room): JsonResponse
     {
         $this->authorize('view', $room);
 
@@ -61,16 +62,26 @@ class RoomController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRoomRequest $request, Room $room)
+    public function update(Project $project, Room $room, UpdateRoomRequest $request) : JsonResponse
     {
-        //
+        $this->authorize('update', $room);
+
+        $room->update($request->validated());
+        sleep(1);
+
+        return response()->json(new RoomResource($room));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Room $room)
+    public function destroy(Project $project, Room $room): JsonResponse
     {
-        //
+        $this->authorize('delete', $room);
+
+        $room->delete();
+        sleep(1);
+
+        return response()->json(['message' => 'Комната удалёна']);
     }
 }

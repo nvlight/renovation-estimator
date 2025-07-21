@@ -11,7 +11,7 @@ class UpdateRoomRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            // нет надобности проверить эти ID на существование, потому что они уже разрешены сервис контейнером.
+            //'project_id' => ['required', 'exists:projects,id'],
+            //'room_id' => ['required', 'exists:rooms,id'],
+            'name' => ['required', 'string', 'min:3', 'max:155'],
+            'description' => ['nullable', 'string', 'max:155'],
+            'height' => ['required', 'numeric', 'min:2', 'max:5'],
         ];
     }
 }
