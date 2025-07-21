@@ -12,7 +12,7 @@ return function (Exceptions $exceptions) {
                 $model = $previous->getModel();
                 $message = match ($model) {
                     'App\\Models\\Project' => 'Проект не найден',
-                    //'App\\Models\\Room' => 'Комната не найдена',
+                    'App\\Models\\Room' => 'Комната не найдена',
                     default => 'Ресурс не найден',
                 };
                 return response()->json(['message' => $message], 404);

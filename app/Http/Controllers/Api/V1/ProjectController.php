@@ -35,7 +35,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request): JsonResponse
     {
-        $project = Project::create([
+        $project = Project::query()->create([
             'user_id' => Auth::id(),
             'name' => $request->name,
             'description' => $request->description,

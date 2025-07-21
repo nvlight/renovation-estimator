@@ -64,7 +64,7 @@ services:
             retries: 3
             timeout: 5s
     quasar-node:
-        image: node:22
+        image: node:22-alpine
         #image: node:22-alpine
         #user: node
         ports:

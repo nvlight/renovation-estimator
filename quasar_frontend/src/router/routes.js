@@ -12,13 +12,13 @@ const routes = [
         path: 'login',
         name: 'Login',
         component: () => import('@/pages/LoginPage.vue'),
-        meta: { requiresGuest: true }, // Только для неаутентифицированных
+        meta: { requiresGuest: true }, // Только для не аутентифицированных
       },
       {
         path: 'register',
         name: 'Register',
         component: () => import('@/pages/RegisterPage.vue'),
-        meta: { requiresGuest: true }, // Только для неаутентифицированных
+        meta: { requiresGuest: true }, // Только для не аутентифицированных
       },
       {
         path: 'dashboard',
@@ -38,6 +38,13 @@ const routes = [
         component: () => import('@/pages/TestCssPage.vue'),
         meta: { requiresAuth: false }, // Только для аутентифицированных
       },
+      {
+        path: 'test-walls-builder',
+        name: 'TestWallsBuilder',
+        component: () => import('@/pages/TestWallsBuilder.vue'),
+        meta: { requiresAuth: false }, // Только для аутентифицированных
+      },
+
     ],
   },
 
