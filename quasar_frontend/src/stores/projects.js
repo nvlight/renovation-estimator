@@ -23,7 +23,7 @@ export const useProjectsStore = defineStore('projects', {
     // Логин
     async loadProjects(page = 1, perPage = 10) {
       try {
-        const response = await api.get('/v1/projects', {
+        const response = await api.get('/v1/project', {
           params: { page, per_page: perPage },
         });
         this.projects = response.data.data; // Данные проектов
@@ -39,7 +39,7 @@ export const useProjectsStore = defineStore('projects', {
     },
     async editProject(projectId, projectData) {
       try {
-        const response = await api.patch(`/v1/projects/${projectId}`, projectData);
+        const response = await api.patch(`/v1/project/${projectId}`, projectData);
         this.projects = this.projects.map(project =>
           project.id === projectId ? { ...project, ...response.data } : project
         );
@@ -50,7 +50,7 @@ export const useProjectsStore = defineStore('projects', {
     },
     async deleteProject(projectId) {
       try {
-        const deleted = await api.delete('/v1/projects/' + projectId);
+        const deleted = await api.delete('/v1/project/' + projectId);
         if (deleted) {
           this.projects = this.projects.filter(pr => pr.id !== projectId);
         }
@@ -61,7 +61,7 @@ export const useProjectsStore = defineStore('projects', {
     },
     async addProject(projectData) {
       try {
-        const addProject = await api.post('/v1/projects/', projectData);
+        const addProject = await api.post('/v1/project/', projectData);
         if (addProject) {
           this.projects.unshift(addProject.data);
         }
