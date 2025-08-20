@@ -12,7 +12,7 @@ class Room extends Model
     /** @use HasFactory<\Database\Factories\RoomFactory> */
     use HasFactory;
 
-    public const PER_PAGE = 7;
+    public const PER_PAGE = 10;
 
     protected $fillable = [
         'project_id',

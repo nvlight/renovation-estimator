@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center q-mb-md">
-      <h3 class="q-my-none">Projects</h3>
+      <h4 class="q-my-none">Проекты</h4>
       <q-btn
         color="primary"
         icon="add"
@@ -25,6 +25,10 @@
             <q-icon name="folder" color="primary" size="md"/>
           </q-item-section>
           <q-item-section>
+            <q-item-label
+              class="text-bold"
+              @click="goToProjectRooms(project.id)"
+            >{{ project.id }}</q-item-label>
             <q-item-label class="text-bold">{{ project.name }}</q-item-label>
             <q-item-label caption>{{ project.description || 'No description' }}</q-item-label>
             <q-item-label caption>
@@ -209,6 +213,9 @@
         </q-card-section>
         <q-card-section>
           <q-item-label class="q-mb-md">
+            <strong>id:</strong> {{ viewProjectData.id }}
+          </q-item-label>
+          <q-item-label class="q-mb-md">
             <strong>Name:</strong> {{ viewProjectData.name }}
           </q-item-label>
           <q-item-label class="q-mb-md">
@@ -280,10 +287,16 @@ import {useProjectsStore} from '@/stores/projects';
 import {ref, watch, onMounted} from "vue";
 import {date} from 'quasar'; // Импортируем утилиту для форматирования даты
 import {Notify} from 'quasar';
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
 const loadErrorMessage = ref(null);
+const router = useRouter();
+
+const goToProjectRooms = (projectId) => {
+  router.push({name: 'ProjectRooms', params: { projectId }});
+}
 
 const createProjectErrorMessage = ref('');
 const updateProjectErrorMessage = ref('');

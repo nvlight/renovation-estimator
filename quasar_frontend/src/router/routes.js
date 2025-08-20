@@ -33,6 +33,12 @@ const routes = [
         meta: { requiresAuth: true }, // Только для аутентифицированных
       },
       {
+        path: 'projects/:projectId/rooms',
+        name: 'ProjectRooms',
+        component: () => import('@/pages/RoomsPage.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
         path: 'test-css',
         name: 'TestCss',
         component: () => import('@/pages/TestCssPage.vue'),
