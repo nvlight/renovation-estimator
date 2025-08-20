@@ -35,6 +35,12 @@ QUASAR_NODE=3410</code></pre>
 Для запуска sail в папке с проектом выполнить:
 <pre><code>sail up -d</code></pre>
 
+Если команда не работает, т.к. не найдена, предварительно нужно создать алиас:
+<pre><code>echo "alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'" >> ~/.bashrc
+source ~/.bashrc
+</code></pre>
+а затем снова выполнить команду с sail. 
+
 ### laravel framework 12
 Нужно сделать ключ приложения
 <pre><code>sail artisan key:generate</code></pre>
@@ -67,5 +73,22 @@ npm run test:unit</code></pre>
 <pre><code>#command: sh -c "npm run dev"</code></pre>
 закомментирую строку
 <pre><code>command: ["node", "-e", "console.log('Node 22 is running'); setInterval(() => {}, 1000); "]</code></pre>
+
+Чтобы увидеть результат работы фронтенда, нужно открыть localhost:9010, он может открыться нормально, а вот запросы 
+проходить не будут, например чтобы войти в систему. 
+<br>
+Чтобы запросы проходили по нужному адрессу, нужно изменить порт, в данном случае это 8010. Это точно входа для бекенда. 
+<br>
+Его нужно прописать в этом файле
+<pre><code>frontend_quasar/src/config.js</code></pre>
+<pre><code>// src/config.js
+export const API_CONFIG = {
+  baseURL: 'http://localhost:8010/api',
+};
+</code></pre>
+
+Чтобы у нас были какие нибудь стартовые данные нужно запустить сидер:
+<pre><code>sail artisan db:seed</code></pre>
+После этого можно войти в систему, используя любого пользователя из таблицы users. Паролем будет password
 
 #### все готово! 

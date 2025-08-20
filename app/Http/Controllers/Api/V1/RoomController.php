@@ -19,9 +19,6 @@ class RoomController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Project $project, Request $request): JsonResponse
     {
         $rooms = $project
@@ -33,9 +30,6 @@ class RoomController extends Controller
         return RoomResource::collection($rooms)->response();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreRoomRequest $request): JsonResponse
     {
         $room = Room::query()->create([
@@ -49,9 +43,6 @@ class RoomController extends Controller
         return response()->json(new RoomResource($room), 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Project $project, Room $room): JsonResponse
     {
         $this->authorize('view', $room);
@@ -59,9 +50,6 @@ class RoomController extends Controller
         return response()->json(new RoomResource($room));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Project $project, Room $room, UpdateRoomRequest $request) : JsonResponse
     {
         $this->authorize('update', $room);
@@ -72,9 +60,6 @@ class RoomController extends Controller
         return response()->json(new RoomResource($room));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Project $project, Room $room): JsonResponse
     {
         $this->authorize('delete', $room);

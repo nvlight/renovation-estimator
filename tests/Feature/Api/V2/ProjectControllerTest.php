@@ -11,7 +11,7 @@ it('returns a paginated list of projects for v2 with transformed fields', functi
     Project::factory()->count(15)->for($user)->create();
 
     $response = $this->actingAs($user)
-        ->getJson('/api/v2/projects');
+        ->getJson('/api/v2/project');
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -31,7 +31,7 @@ it('can show project for v2', function () {
     $project = Project::factory()->for($user)->create();
 
     $response = $this->actingAs($user)
-        ->getJson("/api/v2/projects/{$project->id}");
+        ->getJson("/api/v2/project/{$project->id}");
 
     $response->assertOk()
         ->assertJsonFragment([
@@ -56,7 +56,7 @@ it('can store a new project for v2', function () {
     ];
 
     $response = $this->actingAs($user)
-        ->postJson('/api/v2/projects', $data);
+        ->postJson('/api/v2/project', $data);
 
     $response->assertCreated()
         ->assertJsonPath('name', 'New Project');
@@ -67,7 +67,7 @@ it('can update a project for v2', function () {
     $project = Project::factory()->for($user)->create();
 
     $response = $this->actingAs($user)
-        ->patchJson("/api/v2/projects/{$project->id}", ['name' => 'Another Name']);
+        ->patchJson("/api/v2/project/{$project->id}", ['name' => 'Another Name']);
 
     $response->assertOk()
         ->assertJsonPath('name', 'Another Name');
@@ -78,7 +78,7 @@ it('can delete a project for v2', function () {
     $project = Project::factory()->for($user)->create();
 
     $response = $this->actingAs($user)
-        ->deleteJson("/api/v2/projects/{$project->id}");
+        ->deleteJson("/api/v2/project/{$project->id}");
 
     $response->assertOk()
         ->assertJson(['message' => 'Проект удалён']);
