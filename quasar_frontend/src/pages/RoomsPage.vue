@@ -468,6 +468,7 @@ async function deleteItem() {
       await roomsStore.loadRooms(projectId, currentPage.value); // Перезагружаем текущую страницу
     }
   } catch (error) {
+    console.log(error)
     deleteItemErrorMessage.value = error.response?.data?.message || 'Failed to delete room';
     //console.log('deleteProject error:', deleteProjectErrorMessage.value);
   } finally {

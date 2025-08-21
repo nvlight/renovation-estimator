@@ -1,12 +1,13 @@
 import {installQuasarPlugin} from '@quasar/quasar-app-extension-testing-unit-vitest';
 import {createTestingPinia} from '@pinia/testing';
-import {useRouter, useRoute} from 'vue-router';
+//import {useRouter, useRoute} from 'vue-router';
 import {flushPromises, mount} from '@vue/test-utils';
 import RoomsPage from '@/pages/RoomsPage.vue';
 import {useRoomsStore} from '@/stores/rooms';
 import {useAuthStore} from '@/stores/auth';
 import {QBtn, QDialog, QPagination, QForm, QInput} from 'quasar';
 import {vi, describe, beforeEach, afterEach, it, expect} from 'vitest';
+//import { Notify } from 'quasar';
 
 installQuasarPlugin();
 
@@ -20,6 +21,17 @@ vi.mock('vue-router', () => ({
     path: 'projects/:projectId/rooms', // Укажите путь, если он используется в компоненте
   })),
 }));
+
+// Мокаем Notify.create
+vi.mock('quasar', async (importOriginal) => {
+  const original = await importOriginal(); // Импортируем оригинальный модуль Quasar
+  return {
+    ...original, // Сохраняем все оригинальные экспорты
+    Notify: {
+      create: vi.fn(), // Мокаем Notify.create
+    },
+  };
+});
 
 describe('ProjectRoomsPage', () => {
   let wrapper = null;
@@ -243,29 +255,34 @@ describe('ProjectRoomsPage', () => {
     expect(wrapper.vm.deleteItemName).toBe('Room 1');
   });
 
-  it('calls deleteItem when confirming deletion', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  it.only('calls deleteItem when confirming deletion', async () => {
+    //const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const roomsStore = useRoomsStore(pinia);
-    roomsStore.deleteRoom.mockResolvedValue({
-      success: true,
-    });
+    roomsStore.deleteRoom.mockResolvedValue(true);
 
     wrapper.vm.showDeleteItemConfirmDialog = true;
     wrapper.vm.deleteItemId = 1;
     await wrapper.vm.$nextTick();
 
+    const deleteDialog = wrapper.findAllComponents(QDialog).find(dialog => dialog.props().modelValue === wrapper.vm.showDeleteItemConfirmDialog);
+    expect(deleteDialog.exists()).toBe(true);
+
     const deleteButton = wrapper.findAllComponents(QBtn).find(btn => btn.text().toLowerCase().includes('delete'));
+    expect(deleteButton.exists()).toBe(true);
     await deleteButton.trigger('click');
     await wrapper.vm.$nextTick();
     await flushPromises();
 
-    console.log('deleteRoom mock result:', roomsStore.deleteRoom.mock.results);
+    //console.log('deleteRoom mock result:', roomsStore.deleteRoom.mock.results);
 
-    expect(roomsStore.deleteRoom).toHaveBeenCalledWith("123", 1);
+    const deleteRoom = roomsStore.deleteRoom;
+    expect(deleteRoom).toHaveBeenCalledWith("123", 1);
+    //expect(deleteRoom.mock.results[0].value).resolves.toBe(true);
+
     expect(wrapper.vm.showDeleteItemConfirmDialog).toBe(false);
-    //expect(wrapper.vm.deleteProjectErrorMessage).toBe('');
+    expect(wrapper.vm.deleteItemErrorMessage).toBe('');
 
-    consoleSpy.mockRestore();
+    //consoleSpy.mockRestore();
   });
 
   it('initializes auth and loads projects on mount', () => {
