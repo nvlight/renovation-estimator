@@ -46,6 +46,7 @@
             </q-item-section>
 
             <q-item-section side>
+              <q-btn flat icon="arrow_forward" color="primary" @click="goToRoomSpecifications(room.id)" />
               <q-btn flat icon="visibility" color="grey-7" @click="openViewRoomDialog(room)"/>
               <q-btn flat icon="edit" color="primary" @click="openEditItemDialog(room)"/>
               <q-btn flat icon="delete" color="negative" @click="confirmDeleteItem(room.name, room.id)"/>
@@ -294,14 +295,20 @@
 </template>
 
 <script setup>
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {onMounted, ref, watch} from "vue";
 import {useAuthStore} from '@/stores/auth';
 import {useRoomsStore} from "@/stores/rooms.js";
 import {date, Notify} from "quasar";
 
 const route = useRoute()
+const router = useRouter()
 const projectId = route.params.projectId;
+
+const goToRoomSpecifications = (roomId) => {
+  console.log(roomId, projectId);
+  router.push({name: 'RoomSpecifications', params: { projectId, roomId }});
+}
 
 const loadErrorMessage = ref(null);
 

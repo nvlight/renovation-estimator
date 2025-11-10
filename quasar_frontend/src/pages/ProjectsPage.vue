@@ -25,10 +25,7 @@
             <q-icon name="folder" color="primary" size="md"/>
           </q-item-section>
           <q-item-section>
-            <q-item-label
-              class="text-bold"
-              @click="goToProjectRooms(project.id)"
-            >{{ project.id }}</q-item-label>
+            <q-item-label class="text-bold">{{ project.id }}</q-item-label>
             <q-item-label class="text-bold">{{ project.name }}</q-item-label>
             <q-item-label caption>{{ project.description || 'No description' }}</q-item-label>
             <q-item-label caption>
@@ -37,6 +34,7 @@
           </q-item-section>
 
           <q-item-section side>
+            <q-btn flat icon="arrow_forward" color="primary" @click="goToProjectRooms(project.id)" />
             <q-btn flat icon="visibility" color="grey-7" @click="openViewProjectDialog(project)"/>
             <q-btn flat icon="edit" color="primary" @click="openEditProjectDialog(project)"/>
             <q-btn flat icon="delete" color="negative" @click="confirmDeleteProject(project.id, project.name)"/>

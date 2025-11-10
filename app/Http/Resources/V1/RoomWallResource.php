@@ -16,6 +16,7 @@ class RoomWallResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'project_id' => $this->room->project_id,
             'room_id' => $this->room_id,
             'length' => (double)($this->length),
             'angle' => (float)($this->angle),

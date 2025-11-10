@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomWallRequest;
 use App\Http\Requests\UpdateRoomWallRequest;
-use App\Http\Resources\V1\RoomResource;
 use App\Http\Resources\V1\RoomWallResource;
-use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomWall;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

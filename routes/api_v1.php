@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\RoomController;
-use App\Http\Controllers\RoomWallController;
+use App\Http\Controllers\Api\V1\RoomWallController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {

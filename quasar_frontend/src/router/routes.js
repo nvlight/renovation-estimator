@@ -37,6 +37,11 @@ const routes = [
         name: 'ProjectRooms',
         component: () => import('@/pages/RoomsPage.vue'),
         meta: { requiresAuth: true },
+      },{
+        path: 'projects/:projectId/rooms/:roomId/specifications',
+        name: 'RoomSpecifications',
+        component: () => import('@/pages/RoomSpecifications.vue'),
+        meta: { requiresAuth: true },
       },
       {
         path: 'test-css',
