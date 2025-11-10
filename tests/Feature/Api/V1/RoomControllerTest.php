@@ -11,10 +11,10 @@ uses(RefreshDatabase::class);
 it('returns paginated room list (v1)', function () {
     $user = User::factory()->create();
     $project = Project::factory()->for($user)->create(); // Создаем один проект
-    Room::factory()->count(9)->for($project, 'project')->create(); // Явно указываем имя связи
-
+    Room::factory()->count(10)->for($project, 'project')->create(); // Явно указываем имя связи
+    logger()->error($project);
     $response = $this->actingAs($user)
-        ->getJson("/api/v1/project/{$project->id}/room");
+        ->getJson("/api/v1/project/{$project->id}/rooms");
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -35,7 +35,7 @@ it('can show room (v1)', function () {
     $room = Room::factory()->for($project, 'project')->create(['height' => "2.80"]); // Явно указываем имя связи
 
     $response = $this->actingAs($user)
-        ->getJson("/api/v1/project/{$project->id}/room/{$room->id}");
+        ->getJson("/api/v1/project/{$project->id}/rooms/{$room->id}");
 
     $response->assertOk()
         ->assertJsonFragment([
@@ -44,6 +44,8 @@ it('can show room (v1)', function () {
             'name' => $room->name,
             'description' => $room->description,
             'height' => (string) $room->height,
+            //'updated_at' => (string) $room->height,
+            'updated_at' => $room->updated_at->toJSON(),
         ]);
 });
 
@@ -59,7 +61,7 @@ it('can store room (v1)', function () {
     ];
 
     $response = $this->actingAs($user)
-        ->postJson("/api/v1/project/{$project->id}/room", $data);
+        ->postJson("/api/v1/project/{$project->id}/rooms", $data);
 
     $response->assertCreated()
         ->assertJsonFragment([
@@ -76,7 +78,7 @@ it('can update room (v1)', function () {
     $room = Room::factory()->for($project, 'project')->create(['height' => "2.80"]); // Явно указываем имя связи
 
     $response = $this->actingAs($user)
-        ->patchJson("/api/v1/project/{$project->id}/room/{$room->id}", [
+        ->patchJson("/api/v1/project/{$project->id}/rooms/{$room->id}", [
             'name' => 'This is new room!',
             'description' => 'its my first room in this test',
             'height' => 2.79,
@@ -92,7 +94,7 @@ it('can delete room (v1)', function () {
     $room = Room::factory()->for($project, 'project')->create();
 
     $response = $this->actingAs($user)
-        ->deleteJson("/api/v1/project/{$project->id}/room/{$room->id}");
+        ->deleteJson("/api/v1/project/{$project->id}/rooms/{$room->id}");
 
     $response->assertOk()
         ->assertJson(['message' => 'Комната удалёна']);

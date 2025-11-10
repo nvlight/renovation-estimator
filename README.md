@@ -53,6 +53,12 @@ source ~/.bashrc
 запускаю тесты бекэнда:
 <pre><code>sail artisan test</code></pre>
 
+Чтобы запустить тесты из конкретного файла выполнить команду:
+<pre><code>sail artisan test tests/Feature/Api/V1/RoomControllerTest.php</code></pre>
+
+Чтобы запустить один конкретный тест(ы) из конкретного файла выполнить команду с опцией --filter:
+<pre><code> sail artisan test tests/Feature/Api/V1/RoomControllerTest.php --filter="returns paginated room list"</code></pre>
+
 ### quasar framework 2.18
 Поключаюсь к сервису контейнера, примерная команда имеет вид:
 <pre><code>docker exec -it 593c571c890fc22c3b202ae5f83e3ea5083c21bb9af55ee108a34e20b7e7d861 sh</code></pre>
