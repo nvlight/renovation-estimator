@@ -24,6 +24,7 @@ class CreateRoomWallsCommand extends Command
 
     /**
      * Execute the console command.
+     * Команда не учитывает, что стены должны сходиться.
      */
     public function handle(): int
     {

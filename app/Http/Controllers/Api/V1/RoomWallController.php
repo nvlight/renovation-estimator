@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomWallRequest;
+use App\Http\Requests\StoreRoomWallsRequest;
 use App\Http\Requests\UpdateRoomWallRequest;
 use App\Http\Resources\V1\RoomWallResource;
 use App\Models\Room;
@@ -23,6 +24,7 @@ class RoomWallController extends Controller
     {
         $roomWalls = $room
             ->room_walls()
+            ->orderBy('order')
             ->orderBy('updated_at', 'desc')
             ->paginate($request->get('per_page', RoomWall::PER_PAGE));
         sleep(1);
@@ -31,19 +33,43 @@ class RoomWallController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created walls in storage.
      */
-    public function store(Room $room, StoreRoomWallRequest $request): JsonResponse
+    public function store(Room $room, StoreRoomWallsRequest $request): JsonResponse
     {
-        $roomWall = RoomWall::query()->create([
-            'room_id' => $room->id,
-            'length' => $request->length,
-            'angle' => $request->angle,
-            'order' => $request->order,
-        ]);
+        $this->authorize('view', $room);
+
+        $validated = $request->validated();
+        $allWalls = $validated['walls'] ?? [];
+
+        $roomId = $room->id;
+        $i = 0;
+        if (!empty($allWalls)) {
+            foreach ($allWalls as $key => $wall) {
+                $i++;
+                $allWalls[$key]['room_id'] = $roomId;
+                $allWalls[$key]['order'] = $i;
+                $allWalls[$key]['created_at'] = now();
+                $allWalls[$key]['updated_at'] = now();
+            }
+            logger()->error($allWalls);
+
+            // сначала удяляю существующие стены
+            RoomWall::query()
+                ->where('room_id', $roomId)
+                ->delete();
+
+            // добавляю новые
+            RoomWall::query()->insert($allWalls);
+        }
+
         sleep(1);
 
-        return response()->json(new RoomWallResource($roomWall), 201);
+        return response()->json([
+            'walls' => $allWalls,
+            'success' => true,
+            'message' => 'success store room walls',
+        ]);
     }
 
     /**

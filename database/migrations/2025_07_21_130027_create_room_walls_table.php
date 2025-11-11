@@ -16,9 +16,10 @@ return new class extends Migration
 
             //$table->foreignId('room_id')->references('id')->on('rooms');
             $table->foreignId('room_id')->constrained()->onDelete('cascade');
-            $table->decimal('length', 7, 2); // Длина стены в метрах (например, 9999.99)
+            $table->decimal('length', 7, 2); // Длина стены в сантиметрах (например, 9999.99)
             $table->decimal('angle', 5, 2); // Угол разворота в градусах (например, 359.99)
-            $table->unsignedInteger('order')->default(0); // Порядок стены в многоугольнике
+            $table->boolean('is_real')->default(true); // флаг, является ли стена настоящей (не проемом)
+            $table->unsignedInteger('order')->default(1); // Порядок стены в многоугольнике
 
             $table->timestamps();
         });

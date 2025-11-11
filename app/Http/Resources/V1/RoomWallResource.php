@@ -20,6 +20,7 @@ class RoomWallResource extends JsonResource
             'room_id' => $this->room_id,
             'length' => (double)($this->length),
             'angle' => (float)($this->angle),
+            'is_real' => (integer)($this->is_real),
             'order' => intval($this->order),
         ];
     }

@@ -20,6 +20,7 @@
 
     <q-card flat bordered class="q-pa-md">
 
+      <!-- добавление точечно стены -->
       <div class="flex">
         <q-form @submit.prevent="addWall">
           <div class="row q-gutter-md">
@@ -38,104 +39,128 @@
             <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
           </div>
         </q-form>
-        <div class="q-mt-md q-gutter-sm">
-          <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
-          <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
-          <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
-        </div>
       </div>
-      <div>
-        <q-input
-          name="wall_lengths"
-          filled
-          v-model="rawInput"
-          label="Ввод стен: длина угол"
-          type="textarea"
-          autogrow
-          class="q-mt-md"
-          hint="Каждая строка: ДЛИНА УГОЛ, например: 400 90"
-        />
+      <q-separator class="q-my-md"/>
 
-        <q-btn
-          class="q-mt-md"
-          label="Загрузить"
-          color="primary"
-          @click="loadWallsFromText"
-        />
+      <!-- добавление стен к комнате -->
+      <div>
+        <div class="flex justify-around">
+
+          <div style="width: 333px;">
+            <q-input
+              name="wall_lengths"
+              filled
+              v-model="rawInput"
+              label="Ввод стен: длина угол"
+              type="textarea"
+              autogrow
+              class="q-mt-md"
+              hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
+            />
+            <q-btn
+              class="q-mt-lg"
+              label="Предпросмотр"
+              color="primary"
+              @click="loadWallsFromText"
+            />
+          </div>
+
+          <div class="q-ma-md">
+            <div class="col1">
+
+              <div class="q-ma-md q-mt-none text-subtitle1 no_margin_top" style="">
+                Периметр: {{ stats.perimeter }} см<br/>
+                Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
+                {{ stats.is_closed ? 'Да' : 'Нет' }}
+              </strong><br/>
+                Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})
+              </div>
+
+              <!--          <div class="overflow-hidden q-ma-md no_margin_top">-->
+              <!--            <pre class="q-ma-none">{{ roomWallsInfo }}</pre>-->
+              <!--          </div>-->
+            </div>
+
+            <div class="col1.5 q-ma-md">
+              <div class="q-mt-md q-gutter-sm">
+                <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
+                <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
+                <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
+              </div>
+            </div>
+
+            <div class="col2" style="border: 1px solid #ccc;">
+              <svg
+                width="100%"
+                height="100%"
+                @mousedown="startPan"
+                @mousemove="onPan"
+                @mouseup="stopPan"
+                @mouseleave="stopPan"
+                @wheel.prevent="onWheel"
+                :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
+                ref="svgRef"
+              >
+                <g>
+                  <!-- Линии -->
+                  <polyline
+                    :points="svgPoints"
+                    fill="none"
+                    stroke="black"
+                    stroke-width="2"
+                  />
+
+                  <!-- Конечная точка -->
+                  <circle
+                    :cx="endPoint.x"
+                    :cy="endPoint.y"
+                    r="5"
+                    :fill="stats.is_closed ? 'green' : 'red'"
+                  />
+
+                  <!-- Подписи к стенам -->
+                  <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
+                    <text
+                      :x="(p.x + points[i + 1].x) / 2"
+                      :y="(p.y + points[i + 1].y) / 2 - 5"
+                      font-size="12"
+                      fill="blue"
+                      text-anchor="middle"
+                    >
+                      {{ walls[i].length }} см
+                    </text>
+                  </template>
+
+                  <!-- Углы -->
+                  <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
+                  <!--              <text-->
+                  <!--                v-if="i > 0 && i < points.length - 1"-->
+                  <!--                :x="p.x + 10"-->
+                  <!--                :y="p.y - 10"-->
+                  <!--                font-size="12"-->
+                  <!--                fill="orange"-->
+                  <!--              >-->
+                  <!--                {{ getCornerAngle(i) }}°-->
+                  <!--              </text>-->
+                  <!--            </template>-->
+                </g>
+              </svg>
+
+              <div class="flex justify-center">
+                <q-btn
+                  class="q-mb-md"
+                  color="primary"
+                  label="Сохранить стены"
+                  :loading="wallsSaving"
+                  @click="saveWalls" />
+              </div>
+          </div>
+
+          </div>
+        </div>
       </div>
 
       <q-separator class="q-my-md"/>
-
-      <div class="flex row">
-        <div style="border: 1px solid #ccc; overflow: hidden; width: 500px; height: 300px;">
-          <svg
-            width="100%"
-            height="100%"
-            @mousedown="startPan"
-            @mousemove="onPan"
-            @mouseup="stopPan"
-            @mouseleave="stopPan"
-            @wheel.prevent="onWheel"
-            :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
-            ref="svgRef"
-          >
-            <g>
-              <!-- Линии -->
-              <polyline
-                :points="svgPoints"
-                fill="none"
-                stroke="black"
-                stroke-width="2"
-              />
-
-              <!-- Конечная точка -->
-              <circle
-                :cx="endPoint.x"
-                :cy="endPoint.y"
-                r="5"
-                :fill="stats.is_closed ? 'green' : 'red'"
-              />
-
-              <!-- Подписи к стенам -->
-              <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
-                <text
-                  :x="(p.x + points[i + 1].x) / 2"
-                  :y="(p.y + points[i + 1].y) / 2 - 5"
-                  font-size="12"
-                  fill="blue"
-                  text-anchor="middle"
-                >
-                  {{ walls[i].length }} см
-                </text>
-              </template>
-
-              <!-- Углы -->
-              <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
-              <!--              <text-->
-              <!--                v-if="i > 0 && i < points.length - 1"-->
-              <!--                :x="p.x + 10"-->
-              <!--                :y="p.y - 10"-->
-              <!--                font-size="12"-->
-              <!--                fill="orange"-->
-              <!--              >-->
-              <!--                {{ getCornerAngle(i) }}°-->
-              <!--              </text>-->
-              <!--            </template>-->
-            </g>
-          </svg>
-
-
-        </div>
-
-        <div class="q-ma-md q-mt-none text-subtitle1 no_margin_top" style="">
-          Периметр: {{ stats.perimeter }} см<br/>
-          Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
-          {{ stats.is_closed ? 'Да' : 'Нет' }}
-        </strong><br/>
-          Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})
-        </div>
-      </div>
-
     </q-card>
   </q-page>
 </template>
@@ -144,6 +169,7 @@
 import {useRoute} from "vue-router"
 import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
+import {Notify} from "quasar";
 
 //const router = userRouter;
 const route = useRoute();
@@ -151,17 +177,38 @@ const route = useRoute();
 const projectId = ref(null);
 const roomId = ref(null);
 const roomInfo = ref(null);
+const roomWallsInfo = ref(null);
+const wallsSaving = ref(false);
 
 const svgRef = ref(null)
 
 const svgWidth = 1000
 const svgHeight = 1000
-const zoom = ref(7)
-const panX = ref(0)
+const zoom = ref(6)
+const panX = ref(-20)
 const panY = ref(0)
 
 let isPanning = false
 let startPoint = { x: 0, y: 0 }
+
+let rawInput = ref('');
+
+// создается четырехугольник с отсечка 50, 50
+rawInput.value = `350 90 1
+400 0 1
+50 -90 1
+50 0 1
+300 -90 1
+450 180 1`;
+
+// создается четырехугольник со срезом угла 50, 50
+rawInput.value = `350 90 1
+400 0 1
+71 -45 1
+300 -90 1
+450 180 1`;
+
+rawInput.value = ``;
 
 const currentProjectRooms = computed(() => {
   return `/projects/${projectId.value}/rooms`;
@@ -178,11 +225,55 @@ const getRoomInfo = async(project_id, room_id) => {
   }
 };
 
-onMounted(() => {
+const getWallsInfo = async(room_id) => {
+  try {
+    const response = await api.get(`/v1/roomWalls/${room_id}`);
+    const data = response.data?.data;
+
+    // привезти к нужному виду.
+    let tmpWalls = ``;
+    if (data && data.length){
+      for(let i of data){
+        tmpWalls += `${i.length} ${i.angle} ${i.is_real} \n`;
+      }
+    }
+    roomWallsInfo.value = tmpWalls;
+
+    return tmpWalls;
+  } catch (error) {
+    throw error.response?.data || { message: 'Load roomWalls failed' };
+  }
+};
+
+const saveWalls = async() => {
+  wallsSaving.value = true;
+  try {
+    const response = await api.post(`/v1/roomWalls/${roomId.value}`,{
+      walls: rawInput.value,
+    });
+
+    Notify.create({
+      type: 'positive',
+      message: 'Room walls stored successfully!',
+    });
+
+    return response.data?.success;
+  } catch (error) {
+    throw error.response?.data || { message: 'save roomWalls failed' };
+  }
+  finally {
+    wallsSaving.value = false;
+  }
+}
+
+onMounted(async  () => {
   projectId.value = route.params.projectId;
   roomId.value = route.params.roomId;
-  getRoomInfo(projectId.value, roomId.value);
+  await getRoomInfo(projectId.value, roomId.value);
+  //loadWallsFromText();
 
+  await getWallsInfo(roomId.value);
+  rawInput.value = roomWallsInfo.value;
   loadWallsFromText();
 });
 
@@ -193,13 +284,6 @@ const angle = ref(0)
 
 // Центральная точка для отображения (центр SVG)
 const center = {x: 0, y: 100}
-
-const rawInput = ref(`350 90
-400 0
-50 -90
-50 0
-300 -90
-450 180`)
 
 const loadWallsFromText = () => {
   const newWalls = []
