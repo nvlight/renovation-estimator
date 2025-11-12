@@ -27,7 +27,6 @@ class RoomWallController extends Controller
             ->orderBy('order')
             ->orderBy('updated_at', 'desc')
             ->paginate($request->get('per_page', RoomWall::PER_PAGE));
-        sleep(1);
 
         return RoomWallResource::collection($roomWalls)->response();
     }
@@ -62,8 +61,6 @@ class RoomWallController extends Controller
             // добавляю новые
             RoomWall::query()->insert($allWalls);
         }
-
-        sleep(1);
 
         return response()->json([
             'walls' => $allWalls,

@@ -18,6 +18,13 @@
     </div>
 
     <q-card flat bordered class="q-pa-md q-mt-md">
+      <div class="text-subtitle1">Высота комнаты: <span class="text-weight-medium">{{ roomHeight }} м.</span></div>
+      <div class="text-subtitle1">Периметр стен: <span class="text-weight-medium">{{ wallsPerimeter }} м.</span></div>
+      <div class="text-subtitle1">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }} кв. м.</span></div>
+      <div class="text-subtitle1">Площадь потолка/пола: <span class="text-weight-medium">{{ ceilingSquare }} кв. м.</span></div>
+    </q-card>
+
+    <q-card flat bordered class="q-pa-md q-mt-md">
       <q-tabs
         v-model="tab"
         dense
@@ -61,121 +68,119 @@
           <q-separator class="q-my-md"/>
 
           <!-- добавление стен к комнате -->
-          <div>
-            <div class="flex">
+          <div class="flex">
+            <!-- input.textarea для ввода стен; предпросмотр, сохранение стен, инфа после рендера svg -->
+            <div style="width: 333px;">
+              <q-input
+                name="wall_lengths"
+                filled
+                v-model="rawInput"
+                label="Ввод стен: длина, угол, настоящая ли стена"
+                type="textarea"
+                autogrow
+                class="q-mt-md"
+                hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
+              />
 
-              <div style="width: 333px;">
-                <q-input
-                  name="wall_lengths"
-                  filled
-                  v-model="rawInput"
-                  label="Ввод стен: длина угол"
-                  type="textarea"
-                  autogrow
-                  class="q-mt-md"
-                  hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
-                />
+              <!-- кнопка сохранения стен -->
+              <div class="flex items-center justify-between q-mt-md">
                 <q-btn
-                  class="q-mt-lg"
+                  class=""
                   label="Предпросмотр"
                   color="primary"
                   @click="loadWallsFromText"
                 />
+                <q-btn
+                  class=""
+                  color="primary"
+                  label="Сохранить стены"
+                  :loading="wallsSaving"
+                  @click="saveWalls" />
               </div>
 
-              <div class="q-ma-md">
-                <div class="col1">
-
-                  <div class="q-ma-md q-mt-none text-subtitle1 no_margin_top" style="">
-                    Периметр: {{ stats.perimeter }} см<br/>
-                    Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
-                    {{ stats.is_closed ? 'Да' : 'Нет' }}
-                  </strong><br/>
-                    Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})
-                  </div>
-
-                  <!--          <div class="overflow-hidden q-ma-md no_margin_top">-->
-                  <!--            <pre class="q-ma-none">{{ roomWallsInfo }}</pre>-->
-                  <!--          </div>-->
+              <!-- svg rendered info -->
+              <div class="q-ma-sm text-subtitle1">
+                <div>
+                  Периметр: {{ stats.perimeter }} см<br/>
+                  Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
+                  {{ stats.is_closed ? 'Да' : 'Нет' }}
+                </strong>
                 </div>
+                <span>Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})</span>
 
-                <div class="col1.5 q-ma-md">
-                  <div class="q-mt-md q-gutter-sm">
-                    <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
-                    <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
-                    <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
-                  </div>
-                </div>
-
-                <div class="col2" style="border: 1px solid #ccc;">
-                  <svg
-                    width="100%"
-                    height="100%"
-                    @mousedown="startPan"
-                    @mousemove="onPan"
-                    @mouseup="stopPan"
-                    @mouseleave="stopPan"
-                    @wheel.prevent="onWheel"
-                    :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
-                    ref="svgRef"
-                  >
-                    <g>
-                      <!-- Линии -->
-                      <polyline
-                        :points="svgPoints"
-                        fill="none"
-                        stroke="black"
-                        stroke-width="2"
-                      />
-
-                      <!-- Конечная точка -->
-                      <circle
-                        :cx="endPoint.x"
-                        :cy="endPoint.y"
-                        r="5"
-                        :fill="stats.is_closed ? 'green' : 'red'"
-                      />
-
-                      <!-- Подписи к стенам -->
-                      <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
-                        <text
-                          :x="(p.x + points[i + 1].x) / 2"
-                          :y="(p.y + points[i + 1].y) / 2 - 5"
-                          font-size="12"
-                          fill="blue"
-                          text-anchor="middle"
-                        >
-                          {{ walls[i].length }} см
-                        </text>
-                      </template>
-
-                      <!-- Углы -->
-                      <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
-                      <!--              <text-->
-                      <!--                v-if="i > 0 && i < points.length - 1"-->
-                      <!--                :x="p.x + 10"-->
-                      <!--                :y="p.y - 10"-->
-                      <!--                font-size="12"-->
-                      <!--                fill="orange"-->
-                      <!--              >-->
-                      <!--                {{ getCornerAngle(i) }}°-->
-                      <!--              </text>-->
-                      <!--            </template>-->
-                    </g>
-                  </svg>
-
-                  <div class="flex justify-center">
-                    <q-btn
-                      class="q-mb-md"
-                      color="primary"
-                      label="Сохранить стены"
-                      :loading="wallsSaving"
-                      @click="saveWalls" />
-                  </div>
-                </div>
-
+                <!--  <div class="overflow-hidden q-ma-md "><pre class="q-ma-none">{{ roomWallsInfo }}</pre></div>-->
               </div>
             </div>
+
+            <!-- нарисованный svg, zoom, периметр -->
+            <div class="q-ma-md">
+              <!-- сама svg -->
+              <div class="col2" style="border: 1px solid #ccc;">
+                <svg
+                  width="100%"
+                  height="100%"
+                  @mousedown="startPan"
+                  @mousemove="onPan"
+                  @mouseup="stopPan"
+                  @mouseleave="stopPan"
+                  @wheel.prevent="onWheel"
+                  :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
+                  ref="svgRef"
+                >
+                  <g>
+                    <!-- Линии -->
+                    <polyline
+                      :points="svgPoints"
+                      fill="none"
+                      stroke="black"
+                      stroke-width="2"
+                    />
+
+                    <!-- Конечная точка -->
+                    <circle
+                      :cx="endPoint.x"
+                      :cy="endPoint.y"
+                      r="5"
+                      :fill="stats.is_closed ? 'green' : 'red'"
+                    />
+
+                    <!-- Подписи к стенам -->
+                    <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
+                      <text
+                        :x="(p.x + points[i + 1].x) / 2"
+                        :y="(p.y + points[i + 1].y) / 2 - 5"
+                        font-size="12"
+                        fill="blue"
+                        text-anchor="middle"
+                      >
+                        {{ walls[i].length }} см
+                      </text>
+                    </template>
+
+                    <!-- Углы -->
+                    <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
+                    <!--              <text-->
+                    <!--                v-if="i > 0 && i < points.length - 1"-->
+                    <!--                :x="p.x + 10"-->
+                    <!--                :y="p.y - 10"-->
+                    <!--                font-size="12"-->
+                    <!--                fill="orange"-->
+                    <!--              >-->
+                    <!--                {{ getCornerAngle(i) }}°-->
+                    <!--              </text>-->
+                    <!--            </template>-->
+                  </g>
+                </svg>
+              </div>
+
+              <!-- zoom -->
+              <div class="q-mt-xs q-gutter-sm">
+                <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
+                <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
+                <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
+              </div>
+            </div>
+
           </div>
         </q-tab-panel>
 
@@ -201,13 +206,16 @@ import {Notify} from "quasar";
 //const router = userRouter;
 const route = useRoute();
 
-const tab = ref('mails');
+const tab = ref('walls');
 
 const projectId = ref(null);
 const roomId = ref(null);
 const roomInfo = ref(null);
 const roomWallsInfo = ref(null);
 const wallsSaving = ref(false);
+
+const roomHeight = ref(0);
+const ceilingSquare = ref(0);
 
 const svgRef = ref(null)
 
@@ -300,6 +308,7 @@ onMounted(async  () => {
   roomId.value = route.params.roomId;
   await getRoomInfo(projectId.value, roomId.value);
   //loadWallsFromText();
+  roomHeight.value = roomInfo.value.height;
 
   await getWallsInfo(roomId.value);
   rawInput.value = roomWallsInfo.value;
@@ -382,6 +391,7 @@ const points = computed(() => {
 
     x += dx * 0.2 // масштаб
     y -= dy * 0.2
+
     pts.push({x, y})
   }
 
@@ -406,10 +416,17 @@ const stats = computed(() => {
   const isClosed = Math.abs(dx) < 1 && Math.abs(dy) < 1
 
   return {
-    perimeter: totalLength.toFixed(2),
+    perimeter: ((totalLength / 100).toFixed(2)) ,
     is_closed: isClosed,
     end_position: [dx.toFixed(2), dy.toFixed(2)]
   }
+})
+const wallsPerimeter = computed( () => {
+  return stats.value.perimeter;
+});
+
+const wallsSquare = computed( () => {
+  return (wallsPerimeter.value * roomHeight.value).toFixed(2);
 })
 
 const startPan = (e) => {

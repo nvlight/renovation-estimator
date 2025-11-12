@@ -25,7 +25,6 @@ class ProjectController extends Controller
             ->projects()
             ->orderBy('created', 'desc')
             ->paginate($request->get('per_page', Project::PER_PAGE));
-        sleep(1);
 
         return ProjectResource::collection($projects)->response();
     }
