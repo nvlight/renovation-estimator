@@ -103,7 +103,8 @@ export default defineConfig((/* ctx */) => {
 
     // animations: 'all', // --- includes all animations
     // https://v2.quasar.dev/options/animations
-    animations: [],
+    //animations: [],
+    animations: 'all',
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
     // sourceFiles: {

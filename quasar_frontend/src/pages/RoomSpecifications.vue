@@ -13,15 +13,15 @@
       <template v-if="roomInfo">
         <h6 class="q-my-none "></h6>
         <h6 class="q-my-none ">{{ roomInfo.description }}</h6>
-<!--        <pre v-if="roomInfo">{{ roomInfo }}</pre>-->
+        <!--        <pre v-if="roomInfo">{{ roomInfo }}</pre>-->
       </template>
     </div>
 
     <q-card flat bordered class="q-pa-md q-mt-md">
       <div class="text-subtitle1">Высота комнаты: <span class="text-weight-medium">{{ roomHeight }} м.</span></div>
       <div class="text-subtitle1">Периметр стен: <span class="text-weight-medium">{{ wallsPerimeter }} м.</span></div>
-      <div class="text-subtitle1">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }} кв. м.</span></div>
-      <div class="text-subtitle1">Площадь потолка/пола: <span class="text-weight-medium">{{ ceilingSquare }} кв. м.</span></div>
+      <div class="text-subtitle1">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }} м.кв. </span></div>
+      <div class="text-subtitle1">Площадь потолка/пола: <span class="text-weight-medium">{{ ceilingSquare }} м.кв. </span></div>
     </q-card>
 
     <q-card flat bordered class="q-pa-md q-mt-md">
@@ -49,18 +49,26 @@
             <q-form @submit.prevent="addWall">
               <div class="row q-gutter-md">
                 <q-input
-                  v-model.number="length"
+                  v-model.number="tmpWall.length"
                   label="Длина стены (см)"
                   type="number"
                   :rules="[val => val > 0 || 'Введите длину > 0']"
                   name="wall_length"/>
                 <q-input
-                  v-model.number="angle"
+                  v-model.number="tmpWall.angle"
                   label="Угол (° от X вправо, против часовой)"
                   type="number"
                   name="wall_angle"/>
-                <q-btn color="primary" label="Добавить стену" type="submit"/>
-                <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
+                <q-input
+                  v-model.number="tmpWall.is_real"
+                  label="Настоящая стена?"
+                  type="number"
+                  :rules="[val => val >= 0 && val <= 1 || 'Если не проем 1, иначе 0']"
+                  name="wall_is_real"/>
+                <div>
+                  <q-btn color="primary" label="Добавить стену" type="submit"/>
+                  <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
+                </div>
               </div>
             </q-form>
           </div>
@@ -101,14 +109,25 @@
               <!-- svg rendered info -->
               <div class="q-ma-sm text-subtitle1">
                 <div>
-                  Периметр: {{ stats.perimeter }} см<br/>
-                  Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
-                  {{ stats.is_closed ? 'Да' : 'Нет' }}
-                </strong>
+                  <!--  Периметр: {{ stats.perimeter }} м.<br/>-->
+                  <span>
+                    Замкнута ли фигура:
+                    <strong
+                      style="display: inline-block;"
+                      :class="[
+                          stats.is_closed ? 'text-positive' : 'text-negative',
+                          { 'animated shake': !stats.is_closed }
+                        ]"
+                    >
+                      {{ stats.is_closed ? 'Да' : 'Нет' }}
+                    </strong>
+                  </span>
                 </div>
+
                 <span>Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})</span>
 
                 <!--  <div class="overflow-hidden q-ma-md "><pre class="q-ma-none">{{ roomWallsInfo }}</pre></div>-->
+                <!--  <div>{{ walls }}</div>-->
               </div>
             </div>
 
@@ -117,8 +136,8 @@
               <!-- сама svg -->
               <div class="col2" style="border: 1px solid #ccc;">
                 <svg
-                  width="100%"
-                  height="100%"
+                  width="350px"
+                  height="230px"
                   @mousedown="startPan"
                   @mousemove="onPan"
                   @mouseup="stopPan"
@@ -215,14 +234,13 @@ const roomWallsInfo = ref(null);
 const wallsSaving = ref(false);
 
 const roomHeight = ref(0);
-const ceilingSquare = ref(0);
 
 const svgRef = ref(null)
 
-const svgWidth = 1000
-const svgHeight = 1000
-const zoom = ref(6)
-const panX = ref(-20)
+const svgWidth = 350
+const svgHeight = 230
+const zoom = ref(2)
+const panX = ref(-40)
 const panY = ref(0)
 
 let isPanning = false
@@ -283,6 +301,15 @@ const getWallsInfo = async(room_id) => {
 };
 
 const saveWalls = async() => {
+  // zz
+  if (!stats.value.is_closed){
+    Notify.create({
+      type: 'negative',
+      message: 'Стены должны быть замкнуты!',
+    });
+    return;
+  }
+
   wallsSaving.value = true;
   try {
     const response = await api.post(`/v1/roomWalls/${roomId.value}`,{
@@ -303,22 +330,13 @@ const saveWalls = async() => {
   }
 }
 
-onMounted(async  () => {
-  projectId.value = route.params.projectId;
-  roomId.value = route.params.roomId;
-  await getRoomInfo(projectId.value, roomId.value);
-  //loadWallsFromText();
-  roomHeight.value = roomInfo.value.height;
-
-  await getWallsInfo(roomId.value);
-  rawInput.value = roomWallsInfo.value;
-  loadWallsFromText();
-});
-
 const walls = ref([])
-const length = ref(null)
-const angle = ref(0)
 
+const tmpWall = ref({
+  length: 0,
+  angle: 0,
+  is_real: 1,
+});
 
 // Центральная точка для отображения (центр SVG)
 const center = {x: 0, y: 100}
@@ -328,11 +346,13 @@ const loadWallsFromText = () => {
 
   const lines = rawInput.value.trim().split('\n')
   for (const line of lines) {
-    const [lengthStr, angleStr] = line.trim().split(/\s+/)
+    const [lengthStr, angleStr, isRealStr] = line.trim().split(/\s+/)
     const length = parseFloat(lengthStr)
     const angle = parseFloat(angleStr)
-    if (!isNaN(length) && !isNaN(angle)) {
-      newWalls.push({ length, angle })
+    const is_real = parseFloat(isRealStr)
+
+    if (!isNaN(length) && !isNaN(angle) && !isNaN(is_real)) {
+      newWalls.push({ length, angle, is_real })
     }
   }
 
@@ -341,11 +361,11 @@ const loadWallsFromText = () => {
 
 const addWall = () => {
   walls.value.push({
-    length: parseFloat(length.value),
-    angle: parseFloat(angle.value)
+    length: parseFloat(tmpWall.value.length),
+    angle: parseFloat(tmpWall.value.angle)
   })
-  length.value = null
-  angle.value = 0
+  tmpWall.value.length = 0;
+  tmpWall.value.angle = 0;
 }
 
 const removeLastWall = () => {
@@ -429,6 +449,10 @@ const wallsSquare = computed( () => {
   return (wallsPerimeter.value * roomHeight.value).toFixed(2);
 })
 
+const ceilingSquare = computed( () => {
+  return calculatePolygonSquare(walls.value);
+});
+
 const startPan = (e) => {
   isPanning = true
   startPoint = { x: e.clientX, y: e.clientY }
@@ -452,10 +476,52 @@ const onWheel = (e) => {
   zoom.value = Math.max(0.2, zoom.value + delta)
 }
 
+/**
+ * Подсчет площади многоугольника по формуле Гаусса.
+ * @param segments
+ * @returns {number}
+ */
+const calculatePolygonSquare = (segments) => {
+  // Строим точки вершин, начиная с (0, 0)
+  const points = [{ x: 0, y: 0 }];
+  let x = 0;
+  let y = 0;
+
+  for (let val of segments) {
+    const angleRad = val.angle * Math.PI / 180;
+    x += val.length / 100 * Math.cos(angleRad);
+    y += val.length / 100 * Math.sin(angleRad);
+    points.push({ x, y });
+  }
+
+  // Формула шнурков (shoelace) для площади
+  let area = 0;
+  const n = points.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += points[i].x * points[j].y;
+    area -= points[j].x * points[i].y;
+  }
+
+  return +(Math.abs(area) / 2).toFixed(2);
+}
+
+onMounted(async  () => {
+  projectId.value = route.params.projectId;
+  roomId.value = route.params.roomId;
+  await getRoomInfo(projectId.value, roomId.value);
+  roomHeight.value = roomInfo.value.height;
+
+  await getWallsInfo(roomId.value);
+  rawInput.value = roomWallsInfo.value;
+  loadWallsFromText();
+});
+
 </script>
 
 <style scoped>
-  .no_margin_top{
-    margin-top: 0;
+  .animated.shake{
+    animation-duration: 1s !important;  /* Медленнее */
+    animation-iteration-count: 1 !important;  /* 3 раза */
   }
 </style>
