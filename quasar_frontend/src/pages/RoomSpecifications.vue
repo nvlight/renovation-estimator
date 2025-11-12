@@ -8,159 +8,186 @@
     </q-breadcrumbs>
 
     <div class="">
-      <h5 class="q-my-none ">Спецификации проекта {{ projectId }} и комнаты {{ roomId }} </h5>
+      <h5 class="q-my-none ">Проект "{{ roomInfo?.project_name }}" ({{ projectId }})</h5>
+      <h5 class="q-my-none ">Комната "{{ roomInfo?.name }}" ({{ roomId }}) </h5>
       <template v-if="roomInfo">
-        <h6 class="q-my-none ">{{ roomInfo.name }}. </h6>
+        <h6 class="q-my-none "></h6>
         <h6 class="q-my-none ">{{ roomInfo.description }}</h6>
-        <!--      <pre v-if="roomInfo">-->
-        <!--        {{ roomInfo }}-->
-        <!--      </pre>-->
+<!--        <pre v-if="roomInfo">{{ roomInfo }}</pre>-->
       </template>
     </div>
 
-    <q-card flat bordered class="q-pa-md">
+    <q-card flat bordered class="q-pa-md q-mt-md">
+      <q-tabs
+        v-model="tab"
+        dense
+        class="text-grey"
+        active-color="primary"
+        indicator-color="primary"
+        align="justify"
+        narrow-indicator
+      >
+        <q-tab name="walls" label="Стены" />
+        <q-tab name="doors" label="Двери" />
+        <q-tab name="windows" label="Окна" />
+      </q-tabs>
+      <q-separator />
 
-      <!-- добавление точечно стены -->
-      <div class="flex">
-        <q-form @submit.prevent="addWall">
-          <div class="row q-gutter-md">
-            <q-input
-              v-model.number="length"
-              label="Длина стены (см)"
-              type="number"
-              :rules="[val => val > 0 || 'Введите длину > 0']"
-              name="wall_length"/>
-            <q-input
-              v-model.number="angle"
-              label="Угол (° от X вправо, против часовой)"
-              type="number"
-             name="wall_angle"/>
-            <q-btn color="primary" label="Добавить стену" type="submit"/>
-            <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
-          </div>
-        </q-form>
-      </div>
-      <q-separator class="q-my-md"/>
+      <q-tab-panels v-model="tab" animated>
+        <q-tab-panel name="walls">
+          <div class="text-h6">Редактирование стен</div>
 
-      <!-- добавление стен к комнате -->
-      <div>
-        <div class="flex justify-around">
-
-          <div style="width: 333px;">
-            <q-input
-              name="wall_lengths"
-              filled
-              v-model="rawInput"
-              label="Ввод стен: длина угол"
-              type="textarea"
-              autogrow
-              class="q-mt-md"
-              hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
-            />
-            <q-btn
-              class="q-mt-lg"
-              label="Предпросмотр"
-              color="primary"
-              @click="loadWallsFromText"
-            />
+          <!-- добавление точечно стены -->
+          <div class="flex">
+            <q-form @submit.prevent="addWall">
+              <div class="row q-gutter-md">
+                <q-input
+                  v-model.number="length"
+                  label="Длина стены (см)"
+                  type="number"
+                  :rules="[val => val > 0 || 'Введите длину > 0']"
+                  name="wall_length"/>
+                <q-input
+                  v-model.number="angle"
+                  label="Угол (° от X вправо, против часовой)"
+                  type="number"
+                  name="wall_angle"/>
+                <q-btn color="primary" label="Добавить стену" type="submit"/>
+                <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
+              </div>
+            </q-form>
           </div>
 
-          <div class="q-ma-md">
-            <div class="col1">
+          <q-separator class="q-my-md"/>
 
-              <div class="q-ma-md q-mt-none text-subtitle1 no_margin_top" style="">
-                Периметр: {{ stats.perimeter }} см<br/>
-                Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
-                {{ stats.is_closed ? 'Да' : 'Нет' }}
-              </strong><br/>
-                Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})
-              </div>
+          <!-- добавление стен к комнате -->
+          <div>
+            <div class="flex">
 
-              <!--          <div class="overflow-hidden q-ma-md no_margin_top">-->
-              <!--            <pre class="q-ma-none">{{ roomWallsInfo }}</pre>-->
-              <!--          </div>-->
-            </div>
-
-            <div class="col1.5 q-ma-md">
-              <div class="q-mt-md q-gutter-sm">
-                <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
-                <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
-                <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
-              </div>
-            </div>
-
-            <div class="col2" style="border: 1px solid #ccc;">
-              <svg
-                width="100%"
-                height="100%"
-                @mousedown="startPan"
-                @mousemove="onPan"
-                @mouseup="stopPan"
-                @mouseleave="stopPan"
-                @wheel.prevent="onWheel"
-                :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
-                ref="svgRef"
-              >
-                <g>
-                  <!-- Линии -->
-                  <polyline
-                    :points="svgPoints"
-                    fill="none"
-                    stroke="black"
-                    stroke-width="2"
-                  />
-
-                  <!-- Конечная точка -->
-                  <circle
-                    :cx="endPoint.x"
-                    :cy="endPoint.y"
-                    r="5"
-                    :fill="stats.is_closed ? 'green' : 'red'"
-                  />
-
-                  <!-- Подписи к стенам -->
-                  <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
-                    <text
-                      :x="(p.x + points[i + 1].x) / 2"
-                      :y="(p.y + points[i + 1].y) / 2 - 5"
-                      font-size="12"
-                      fill="blue"
-                      text-anchor="middle"
-                    >
-                      {{ walls[i].length }} см
-                    </text>
-                  </template>
-
-                  <!-- Углы -->
-                  <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
-                  <!--              <text-->
-                  <!--                v-if="i > 0 && i < points.length - 1"-->
-                  <!--                :x="p.x + 10"-->
-                  <!--                :y="p.y - 10"-->
-                  <!--                font-size="12"-->
-                  <!--                fill="orange"-->
-                  <!--              >-->
-                  <!--                {{ getCornerAngle(i) }}°-->
-                  <!--              </text>-->
-                  <!--            </template>-->
-                </g>
-              </svg>
-
-              <div class="flex justify-center">
+              <div style="width: 333px;">
+                <q-input
+                  name="wall_lengths"
+                  filled
+                  v-model="rawInput"
+                  label="Ввод стен: длина угол"
+                  type="textarea"
+                  autogrow
+                  class="q-mt-md"
+                  hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
+                />
                 <q-btn
-                  class="q-mb-md"
+                  class="q-mt-lg"
+                  label="Предпросмотр"
                   color="primary"
-                  label="Сохранить стены"
-                  :loading="wallsSaving"
-                  @click="saveWalls" />
+                  @click="loadWallsFromText"
+                />
               </div>
-          </div>
 
-          </div>
-        </div>
-      </div>
+              <div class="q-ma-md">
+                <div class="col1">
 
-      <q-separator class="q-my-md"/>
+                  <div class="q-ma-md q-mt-none text-subtitle1 no_margin_top" style="">
+                    Периметр: {{ stats.perimeter }} см<br/>
+                    Замкнута ли фигура: <strong :class="stats.is_closed ? 'text-positive' : 'text-negative'">
+                    {{ stats.is_closed ? 'Да' : 'Нет' }}
+                  </strong><br/>
+                    Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})
+                  </div>
+
+                  <!--          <div class="overflow-hidden q-ma-md no_margin_top">-->
+                  <!--            <pre class="q-ma-none">{{ roomWallsInfo }}</pre>-->
+                  <!--          </div>-->
+                </div>
+
+                <div class="col1.5 q-ma-md">
+                  <div class="q-mt-md q-gutter-sm">
+                    <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
+                    <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
+                    <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
+                  </div>
+                </div>
+
+                <div class="col2" style="border: 1px solid #ccc;">
+                  <svg
+                    width="100%"
+                    height="100%"
+                    @mousedown="startPan"
+                    @mousemove="onPan"
+                    @mouseup="stopPan"
+                    @mouseleave="stopPan"
+                    @wheel.prevent="onWheel"
+                    :viewBox="`${panX} ${panY} ${svgWidth / zoom} ${svgHeight / zoom}`"
+                    ref="svgRef"
+                  >
+                    <g>
+                      <!-- Линии -->
+                      <polyline
+                        :points="svgPoints"
+                        fill="none"
+                        stroke="black"
+                        stroke-width="2"
+                      />
+
+                      <!-- Конечная точка -->
+                      <circle
+                        :cx="endPoint.x"
+                        :cy="endPoint.y"
+                        r="5"
+                        :fill="stats.is_closed ? 'green' : 'red'"
+                      />
+
+                      <!-- Подписи к стенам -->
+                      <template v-for="(p, i) in points.slice(0, -1)" :key="'label-' + i">
+                        <text
+                          :x="(p.x + points[i + 1].x) / 2"
+                          :y="(p.y + points[i + 1].y) / 2 - 5"
+                          font-size="12"
+                          fill="blue"
+                          text-anchor="middle"
+                        >
+                          {{ walls[i].length }} см
+                        </text>
+                      </template>
+
+                      <!-- Углы -->
+                      <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
+                      <!--              <text-->
+                      <!--                v-if="i > 0 && i < points.length - 1"-->
+                      <!--                :x="p.x + 10"-->
+                      <!--                :y="p.y - 10"-->
+                      <!--                font-size="12"-->
+                      <!--                fill="orange"-->
+                      <!--              >-->
+                      <!--                {{ getCornerAngle(i) }}°-->
+                      <!--              </text>-->
+                      <!--            </template>-->
+                    </g>
+                  </svg>
+
+                  <div class="flex justify-center">
+                    <q-btn
+                      class="q-mb-md"
+                      color="primary"
+                      label="Сохранить стены"
+                      :loading="wallsSaving"
+                      @click="saveWalls" />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </q-tab-panel>
+
+        <q-tab-panel name="doors">
+          <div class="text-h6">Редактирование дверей</div>
+        </q-tab-panel>
+
+        <q-tab-panel name="windows">
+          <div class="text-h6">Редактирование окон</div>
+        </q-tab-panel>
+      </q-tab-panels>
+
     </q-card>
   </q-page>
 </template>
@@ -173,6 +200,8 @@ import {Notify} from "quasar";
 
 //const router = userRouter;
 const route = useRoute();
+
+const tab = ref('mails');
 
 const projectId = ref(null);
 const roomId = ref(null);
