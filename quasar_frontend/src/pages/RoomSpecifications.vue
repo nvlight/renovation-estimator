@@ -7,6 +7,11 @@
       <q-breadcrumbs-el :label="`Комната ${roomId}`"/>
     </q-breadcrumbs>
 
+    <!-- for dev -->
+    <div v-if="1===2">
+      <pre>{{ walls }}</pre>
+    </div>
+
     <div id="Project_titles">
       <h5 class="q-my-none ">Проект "{{ roomInfo?.project_name }}" ({{ projectId }})</h5>
       <h5 class="q-my-none ">Комната "{{ roomInfo?.name }}" ({{ roomId }}) </h5>
@@ -253,7 +258,7 @@
         >
           <q-card flat bordered class="q-pa-md q-mt-md">
             <q-tabs
-              v-model="adding_work_types_tabs"
+              v-model="job_types_tabs"
               dense
               class="text-grey"
               active-color="primary"
@@ -267,10 +272,10 @@
             </q-tabs>
             <q-separator />
 
-            <q-tab-panels v-model="adding_work_types_tabs" animated>
+            <q-tab-panels v-model="job_types_tabs" animated>
 
               <q-tab-panel name="stretch_ceiling">
-                <div class="text-h6">Натяжной потолок</div>
+                <stretch-ceiling-calc :walls="walls"/>
               </q-tab-panel>
 
               <q-tab-panel name="drywall">
@@ -327,6 +332,7 @@ import {useRoute} from "vue-router"
 import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
+import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
 
 //const router = userRouter;
 const route = useRoute();
@@ -334,7 +340,7 @@ const route = useRoute();
 const rrub = '&#8381;';
 
 const room_chars_tabs = ref('walls');
-const adding_work_types_tabs = ref('stretch_ceiling');
+const job_types_tabs = ref('stretch_ceiling');
 const etalonWalls = ref(null);
 
 const projectId = ref(null);
