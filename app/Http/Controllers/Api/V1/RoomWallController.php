@@ -41,24 +41,20 @@ class RoomWallController extends Controller
         $validated = $request->validated();
         $allWalls = $validated['walls'] ?? [];
 
-        $roomId = $room->id;
         $i = 0;
         if (!empty($allWalls)) {
             foreach ($allWalls as $key => $wall) {
                 $i++;
-                $allWalls[$key]['room_id'] = $roomId;
+                $allWalls[$key]['room_id'] = $room->id;
                 $allWalls[$key]['order'] = $i;
                 $allWalls[$key]['created_at'] = now();
                 $allWalls[$key]['updated_at'] = now();
             }
-            logger()->error($allWalls);
 
-            // сначала удяляю существующие стены
             RoomWall::query()
-                ->where('room_id', $roomId)
+                ->where('room_id', $room->id)
                 ->delete();
 
-            // добавляю новые
             RoomWall::query()->insert($allWalls);
         }
 

@@ -15,13 +15,13 @@ class RoomWallResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'project_id' => $this->room->project_id,
-            'room_id' => $this->room_id,
+            //'id' => $this->id,
+            //'project_id' => $this->room->project_id,
+            //'room_id' => $this->room_id,
             'length' => (double)($this->length),
             'angle' => (float)($this->angle),
             'is_real' => (integer)($this->is_real),
-            'order' => intval($this->order),
+            //'order' => intval($this->order),
         ];
     }
 }

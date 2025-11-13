@@ -68,6 +68,7 @@
                 <div>
                   <q-btn color="primary" label="Добавить стену" type="submit"/>
                   <q-btn color="negative" flat label="Удалить последнюю" @click="removeLastWall"/>
+                  <q-btn color="success" flat label="Сбросить к эталону" @click="resetWalls"/>
                 </div>
               </div>
             </q-form>
@@ -82,22 +83,17 @@
               <q-input
                 name="wall_lengths"
                 filled
-                v-model="rawInput"
+                v-model="wallText"
                 label="Ввод стен: длина, угол, настоящая ли стена"
                 type="textarea"
                 autogrow
                 class="q-mt-md"
                 hint="Каждая строка: ДЛИНА УГОЛ НЕ_ПРОЕМ, например: 400 90 1"
+                disable
               />
 
               <!-- кнопка сохранения стен -->
               <div class="flex items-center justify-between q-mt-md">
-                <q-btn
-                  class=""
-                  label="Предпросмотр"
-                  color="primary"
-                  @click="loadWallsFromText"
-                />
                 <q-btn
                   class=""
                   color="primary"
@@ -126,8 +122,8 @@
 
                 <span>Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})</span>
 
-                <!--  <div class="overflow-hidden q-ma-md "><pre class="q-ma-none">{{ roomWallsInfo }}</pre></div>-->
-                <!--  <div>{{ walls }}</div>-->
+<!--                  <div class="overflow-hidden q-ma-md "><pre class="q-ma-none">{{ etalonWalls }}</pre></div>-->
+<!--                  <div>{{ walls }}</div>-->
               </div>
             </div>
 
@@ -177,26 +173,41 @@
                     </template>
 
                     <!-- Углы -->
-                    <!--            <template v-for="(p, i) in points" :key="'angle-' + i">-->
-                    <!--              <text-->
-                    <!--                v-if="i > 0 && i < points.length - 1"-->
-                    <!--                :x="p.x + 10"-->
-                    <!--                :y="p.y - 10"-->
-                    <!--                font-size="12"-->
-                    <!--                fill="orange"-->
-                    <!--              >-->
-                    <!--                {{ getCornerAngle(i) }}°-->
-                    <!--              </text>-->
-                    <!--            </template>-->
+                    <template
+                      v-if="showAnglesValues"
+                    >
+                      <template v-for="(p, i) in points" :key="'angle-' + i">
+                        <text
+                          v-if="i > 0 && i < points.length - 1"
+                          :x="p.x - 25"
+                          :y="p.y + 15"
+                          font-size="9"
+                          fill="orange"
+                        >
+                          {{ getCornerAngle(i) }}°
+                        </text>
+                      </template>
+                    </template>
                   </g>
                 </svg>
               </div>
 
               <!-- zoom -->
-              <div class="q-mt-xs q-gutter-sm">
-                <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
-                <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
-                <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
+              <div class="flex flex-row items-center q-mt-md">
+                <div class="flex flex-row items-center q-gutter-sm">
+                  <q-btn icon="zoom_in" @click="zoom += 0.1" round/>
+                  <q-btn icon="zoom_out" @click="zoom = Math.max(0.1, zoom - 0.1)" round/>
+                  <span>Масштаб: {{ zoom.toFixed(1) }}x</span>
+                </div>
+                <!--  show angles-->
+                <q-checkbox
+                  name="inverted_show_angles"
+                  v-model="showAnglesValues"
+                  @click="!showAnglesValues"
+                  label="Показывать углы"
+                  color="primary"
+                  class=""
+                />
               </div>
             </div>
 
@@ -226,11 +237,11 @@ import {Notify} from "quasar";
 const route = useRoute();
 
 const tab = ref('walls');
+const etalonWalls = ref(null);
 
 const projectId = ref(null);
 const roomId = ref(null);
 const roomInfo = ref(null);
-const roomWallsInfo = ref(null);
 const wallsSaving = ref(false);
 
 const roomHeight = ref(0);
@@ -243,30 +254,21 @@ const zoom = ref(2)
 const panX = ref(-40)
 const panY = ref(0)
 
+const showAnglesValues = ref(false);
 let isPanning = false
 let startPoint = { x: 0, y: 0 }
 
-let rawInput = ref('');
-
-// создается четырехугольник с отсечка 50, 50
-rawInput.value = `350 90 1
-400 0 1
-50 -90 1
-50 0 1
-300 -90 1
-450 180 1`;
-
-// создается четырехугольник со срезом угла 50, 50
-rawInput.value = `350 90 1
-400 0 1
-71 -45 1
-300 -90 1
-450 180 1`;
-
-rawInput.value = ``;
-
 const currentProjectRooms = computed(() => {
   return `/projects/${projectId.value}/rooms`;
+});
+
+const wallText = computed({
+  get() {
+    if (!walls.value || walls.value.length === 0) return ''
+    return walls.value
+      .map(wall => `${wall.length} ${wall.angle} ${wall.is_real ? 1 : 0}`) // Форматируем в строку
+      .join('\n')
+  },
 });
 
 const getRoomInfo = async(project_id, room_id) => {
@@ -283,25 +285,13 @@ const getRoomInfo = async(project_id, room_id) => {
 const getWallsInfo = async(room_id) => {
   try {
     const response = await api.get(`/v1/roomWalls/${room_id}`);
-    const data = response.data?.data;
-
-    // привезти к нужному виду.
-    let tmpWalls = ``;
-    if (data && data.length){
-      for(let i of data){
-        tmpWalls += `${i.length} ${i.angle} ${i.is_real} \n`;
-      }
-    }
-    roomWallsInfo.value = tmpWalls;
-
-    return tmpWalls;
+    return response.data?.data;
   } catch (error) {
     throw error.response?.data || { message: 'Load roomWalls failed' };
   }
 };
 
 const saveWalls = async() => {
-  // zz
   if (!stats.value.is_closed){
     Notify.create({
       type: 'negative',
@@ -313,7 +303,7 @@ const saveWalls = async() => {
   wallsSaving.value = true;
   try {
     const response = await api.post(`/v1/roomWalls/${roomId.value}`,{
-      walls: rawInput.value,
+      walls: walls.value,
     });
 
     Notify.create({
@@ -341,57 +331,45 @@ const tmpWall = ref({
 // Центральная точка для отображения (центр SVG)
 const center = {x: 0, y: 100}
 
-const loadWallsFromText = () => {
-  const newWalls = []
-
-  const lines = rawInput.value.trim().split('\n')
-  for (const line of lines) {
-    const [lengthStr, angleStr, isRealStr] = line.trim().split(/\s+/)
-    const length = parseFloat(lengthStr)
-    const angle = parseFloat(angleStr)
-    const is_real = parseFloat(isRealStr)
-
-    if (!isNaN(length) && !isNaN(angle) && !isNaN(is_real)) {
-      newWalls.push({ length, angle, is_real })
-    }
-  }
-
-  walls.value = newWalls
-}
-
 const addWall = () => {
   walls.value.push({
     length: parseFloat(tmpWall.value.length),
-    angle: parseFloat(tmpWall.value.angle)
+    angle: parseFloat(tmpWall.value.angle),
+    is_real: parseFloat(tmpWall.value.is_real),
   })
   tmpWall.value.length = 0;
   tmpWall.value.angle = 0;
+  tmpWall.value.is_real = 0;
 }
 
 const removeLastWall = () => {
   walls.value.pop()
 }
 
+const resetWalls = () => {
+  walls.value = [...etalonWalls.value];
+}
+
 // получить углы
-// const getCornerAngle = (i) => {
-//   if (i <= 0 || i >= points.value.length - 1) return ''
-//
-//   const A = points.value[i - 1]
-//   const B = points.value[i]
-//   const C = points.value[i + 1]
-//
-//   const v1 = {x: A.x - B.x, y: A.y - B.y}
-//   const v2 = {x: C.x - B.x, y: C.y - B.y}
-//
-//   const dot = v1.x * v2.x + v1.y * v2.y
-//   const len1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y)
-//   const len2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y)
-//
-//   const angleRad = Math.acos(dot / (len1 * len2))
-//   const angleDeg = (angleRad * 180) / Math.PI
-//
-//   return angleDeg.toFixed(1)
-// }
+const getCornerAngle = (i) => {
+  if (i <= 0 || i >= points.value.length - 1) return ''
+
+  const A = points.value[i - 1]
+  const B = points.value[i]
+  const C = points.value[i + 1]
+
+  const v1 = {x: A.x - B.x, y: A.y - B.y}
+  const v2 = {x: C.x - B.x, y: C.y - B.y}
+
+  const dot = v1.x * v2.x + v1.y * v2.y
+  const len1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y)
+  const len2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y)
+
+  const angleRad = Math.acos(dot / (len1 * len2))
+  const angleDeg = (angleRad * 180) / Math.PI
+
+  return angleDeg.toFixed(1)
+}
 
 // Пересчёт всех точек на основе углов и длин
 const points = computed(() => {
@@ -512,9 +490,8 @@ onMounted(async  () => {
   await getRoomInfo(projectId.value, roomId.value);
   roomHeight.value = roomInfo.value.height;
 
-  await getWallsInfo(roomId.value);
-  rawInput.value = roomWallsInfo.value;
-  loadWallsFromText();
+  etalonWalls.value = await getWallsInfo(roomId.value);
+  walls.value = [...etalonWalls.value];
 });
 
 </script>
