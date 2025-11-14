@@ -22,6 +22,8 @@ class RoomWallController extends Controller
      */
     public function index(Room $room, Request $request): JsonResponse
     {
+        $this->authorize('view', $room);
+
         $roomWalls = $room
             ->room_walls()
             ->orderBy('order')
@@ -63,41 +65,5 @@ class RoomWallController extends Controller
             'success' => true,
             'message' => 'success store room walls',
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Room $room, RoomWall $roomWall): JsonResponse
-    {
-        $this->authorize('view', $roomWall);
-
-        return response()->json(new RoomWallResource($roomWall));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateRoomWallRequest $request, Room $room, RoomWall $roomWall): JsonResponse
-    {
-        $this->authorize('update', $roomWall);
-
-        $roomWall->update($request->validated());
-        sleep(1);
-
-        return response()->json(new RoomWallResource($roomWall));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Room $room, RoomWall $roomWall): JsonResponse
-    {
-        $this->authorize('delete', $roomWall);
-
-        $roomWall->delete();
-        sleep(1);
-
-        return response()->json(['message' => 'Стена комнаты удалёна']);
     }
 }

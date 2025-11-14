@@ -299,9 +299,13 @@
         >
           <q-card>
             <q-card-section>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quidem, eius reprehenderit eos corrupti
-              commodi magni quaerat ex numquam, dolorum officiis modi facere maiores architecto suscipit iste
-              eveniet doloribus ullam aliquid.
+              <div>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quidem, eius reprehenderit eos corrupti
+                commodi magni quaerat ex numquam, dolorum officiis modi facere maiores architecto suscipit iste
+                eveniet doloribus ullam aliquid.
+              </div>
+              <div>{{ roomJobs.roomJobsSum }}</div>
+              <div><pre>{{ roomJobs.roomJobs}}</pre></div>
             </q-card-section>
           </q-card>
         </q-expansion-item>
@@ -332,10 +336,12 @@ import {useRoute} from "vue-router"
 import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
+import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
 
 //const router = userRouter;
 const route = useRoute();
+const roomJobs = useRoomJobsStore();
 
 const rrub = '&#8381;';
 
@@ -596,6 +602,9 @@ onMounted(async  () => {
 
   etalonWalls.value = await getWallsInfo(roomId.value);
   walls.value = [...etalonWalls.value];
+
+  const roomJobss = await roomJobs.loadRoomJobs(roomId.value);
+  console.log(roomJobss);
 });
 
 </script>
