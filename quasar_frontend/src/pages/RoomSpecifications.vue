@@ -32,7 +32,7 @@
         <div class="text-subtitle1">Площадь пола: <span class="text-weight-medium">{{ ceilingSquare }} м.кв. </span></div>
       </q-card>
       <q-card class="">
-        <div class="text-subtitle1 text-weight-bold">Общая стоимость <span class="text-weight-medium">235 000 <span v-html="rrub"></span> </span></div>
+        <div class="text-subtitle1 text-weight-bold">Общая стоимость: <span class="text-weight-medium">235 000 <span v-html="rrub"></span> </span></div>
         <div class="text-subtitle1">Строительные материалы: <span class="text-weight-medium">110 000 <span v-html="rrub"></span></span></div>
         <div class="text-subtitle1">Работа мастеров: <span class="text-weight-medium">125 000 <span v-html="rrub"></span></span></div>
       </q-card>
