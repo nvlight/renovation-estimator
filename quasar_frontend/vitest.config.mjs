@@ -25,6 +25,7 @@ export default defineConfig({
   plugins: [
     vue({
       template: {transformAssetUrls},
+      devtools: true, // добавить!
     }),
 
     quasar({

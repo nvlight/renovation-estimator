@@ -35,15 +35,16 @@ export const useRoomJobsStore = defineStore('roomJobs', {
         throw error.response || {message: 'add room failed'};
       }
     },
-    async deleteRoom(projectId, roomId) {
+    async deleteRoomJob(room_id, jobId) {
       try {
-        const deleted = await api.delete(`/v1/project/${projectId}/rooms/${roomId}`);
+        const deleted = await api.delete(`/v1/room/${room_id}/roomJob/${jobId}`);
         if (deleted) {
-          this.rooms = this.rooms.filter(pr => pr.id !== roomId);
+          this.roomJobs = this.roomJobs.filter(pr => pr.id !== jobId);
         }
         return true;
       } catch (error) {
-        throw error.response?.data || {message: 'delete room failed'};
+        console.log(error.response?.data || {message: 'delete room job failed'})
+        return false;
       }
     },
   },

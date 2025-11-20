@@ -306,7 +306,6 @@ const router = useRouter()
 const projectId = route.params.projectId;
 
 const goToRoomSpecifications = (roomId) => {
-  console.log(roomId, projectId);
   router.push({name: 'RoomSpecifications', params: { projectId, roomId }});
 }
 
