@@ -45,7 +45,7 @@ class RoomJobController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, RoomJobs $roomJobs)
+    public function update(Request $request, RoomJob $roomJobs)
     {
         //
     }
@@ -53,8 +53,25 @@ class RoomJobController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(RoomJobs $roomJobs)
+    public function destroy(Room $room, RoomJob $roomJob): JsonResponse
     {
-        //
+        try {
+            $success = $roomJob->delete();
+            return response()->json([
+                'success' => $success,
+                'message' => 'Room job deleted successfully.',
+                //'item' => $roomJob,
+            ]);
+        } catch (\Exception $e) {
+            logger()->error('Failed to delete $roomJob model', [
+                'model_id' => $roomJob->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to delete the resource'
+            ], 500);
+        }
     }
 }

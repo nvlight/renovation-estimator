@@ -299,14 +299,7 @@
         >
           <q-card>
             <q-card-section>
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quidem, eius reprehenderit eos corrupti
-                commodi magni quaerat ex numquam, dolorum officiis modi facere maiores architecto suscipit iste
-                eveniet doloribus ullam aliquid.
-              </div>
-              <job-types-crud-table/>
-              <div>{{ roomJobs.roomJobsSum }}</div>
-              <div><pre>{{ roomJobs.roomJobs}}</pre></div>
+              <job-types-crud-table :room-id="roomId"/>
             </q-card-section>
           </q-card>
         </q-expansion-item>
@@ -337,13 +330,11 @@ import {useRoute} from "vue-router"
 import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
-import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
 import JobTypesCrudTable from "@/components/JobTypes/JobTypesCrudTable.vue";
 
 //const router = userRouter;
 const route = useRoute();
-const roomJobs = useRoomJobsStore();
 
 const rrub = '&#8381;';
 
@@ -351,8 +342,9 @@ const room_chars_tabs = ref('walls');
 const job_types_tabs = ref('stretch_ceiling');
 const etalonWalls = ref(null);
 
-const projectId = ref(null);
-const roomId = ref(null);
+const projectId = computed(() => Number(route.params.projectId));
+const roomId = computed(() => Number(route.params.roomId));
+
 const roomInfo = ref(null);
 const wallsSaving = ref(false);
 
@@ -597,16 +589,11 @@ const calculatePolygonSquare = (segments) => {
 }
 
 onMounted(async  () => {
-  projectId.value = route.params.projectId;
-  roomId.value = route.params.roomId;
   await getRoomInfo(projectId.value, roomId.value);
   roomHeight.value = roomInfo.value.height;
 
   etalonWalls.value = await getWallsInfo(roomId.value);
   walls.value = [...etalonWalls.value];
-
-  const roomJobss = await roomJobs.loadRoomJobs(roomId.value);
-  console.log(roomJobss);
 });
 
 </script>

@@ -13,5 +13,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('v1/roomWalls/{room}', [RoomWallController::class, 'index']);
     Route::post('v1/roomWalls/{room}', [RoomWallController::class, 'store']);
 
-    Route::apiResource('v1/room/{room}/room-job', RoomJobController::class);
+    Route::prefix('v1/room/{room}')->group(function () {
+        Route::apiResource('roomJob', RoomJobController::class);
+    });
+
 });

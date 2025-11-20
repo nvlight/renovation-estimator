@@ -91,8 +91,10 @@
           <span class="text-weight-bold">{{ totalSum }} ₽</span></div>
         <!--        <div class="text-2xl">{{ ceilingResult.sumInfo }}</div>-->
 
+<!--        <pre>{{ computedRowSumsInfo }}</pre>-->
+
         <div class="flex justify-end q-mt-md">
-          <q-btn color="primary" label="Добавить работу"/>
+          <q-btn @click="addJob" color="primary" label="Добавить работу"/>
         </div>
       </div>
     </div>
@@ -146,7 +148,6 @@ const rows = ref([
   {name: 'Доставка', count: 1, price: 1000}
 ]);
 
-// Добавляем виртуальную строку-итог в конец
 const computedRows = computed(() => [
   {
     name: rows.value[0].name,
@@ -161,6 +162,15 @@ const computedRows = computed(() => [
   ...rows.value.slice(2),  // Все обычные строки
 ]);
 
+const computedRowSumsInfo = computed( () => {
+  return computedRows.value.map(item => ({
+      name: item.name,
+      amount: item.count,
+      price: item.price,
+      sum: item.price * item.count,
+    }));
+});
+
 // Computed как функция (для каждой строки)
 const getSum = computed(() => (row) => {
   return row.count * row.price;  // Или с форматированием: (row.count * row.price).toFixed(2)
@@ -174,11 +184,19 @@ const totalSum = computed(() => {
   return computedRows.value.reduce((acc, row) => acc + getSum.value(row), 0);
 });
 
+/**
+ * Периметр потолка
+ * @type {ComputedRef<number>}
+ */
 const perimeter = computed(() => {
   const ch = etalonWalls.value.reduce((prev, wall) => Number(wall.length + prev), 0);
   return +((ch / 100).toFixed(2));
 });
 
+/**
+ * Площадь потолка
+ * @type {ComputedRef<number>}
+ */
 const ceilingSquare = computed(() => {
   return calculatePolygonSquare(etalonWalls.value);
 });
@@ -213,7 +231,6 @@ const processedPerimeter = computed( () => {
   val += 2;
   return val;
 });
-
 
 /**
  * Подсчет площади многоугольника по формуле Гаусса.
@@ -253,32 +270,9 @@ const priceOptions = prices.map(item => ({
 );
 const selectedCeiling = ref(priceOptions[0]);
 
-// const ceilingResult = computed(() => {
-//   let sum = selectedCeilingSum.value + bagetSum.value + chandeliersSum.value + luminairesSum.value + pipesSum.value +
-//     (isCountDelivery.value ? deliveryPrice.value : 0);
-//
-//   let sumInfo = [];
-//   if (ceilingSquare.value) {
-//     sumInfo.push(`Потолок + установка: ${selectedCeilingSum.value}`);
-//   }
-//   if (bagetSum.value) {
-//     sumInfo.push(`Багеты: ${bagetSum.value}`);
-//   }
-//   if (chandeliersSum.value) {
-//     sumInfo.push(`Подлюстренники: ${chandeliersSum.value}`);
-//   }
-//   if (luminairesSum.value) {
-//     sumInfo.push(`Светильники: ${luminairesSum.value}`);
-//   }
-//   if (pipesSum.value) {
-//     sumInfo.push(`Трубы: ${pipesSum.value}`);
-//   }
-//   if (isCountDelivery.value) {
-//     sumInfo.push(`Доставка: ${deliveryPrice.value}`);
-//   }
-//
-//   return {sum, sumInfo}
-// });
+const addJob = () => {
+  computedRowSumsInfo.value;
+};
 
 const resetWalls = () => {
   etalonWalls.value = JSON.parse(JSON.stringify(props.walls));

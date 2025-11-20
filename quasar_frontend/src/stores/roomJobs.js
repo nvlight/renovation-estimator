@@ -17,7 +17,7 @@ export const useRoomJobsStore = defineStore('roomJobs', {
     // Логин
     async loadRoomJobs(room_id) {
       try {
-        const response = await api.get(`/v1/room/${room_id}/room-job`);
+        const response = await api.get(`/v1/room/${room_id}/roomJob`);
         this.roomJobs = response.data.data; // Данные проектов
         return response.data;
       } catch (error) {
