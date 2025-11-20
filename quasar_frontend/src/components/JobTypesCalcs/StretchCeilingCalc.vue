@@ -44,70 +44,55 @@
       <div class="q-mt-sm">
         <div class="text-subtitle1">Периметр: <span class="text-weight-medium">{{ perimeter }} м.</span></div>
         <div class="text-subtitle1">Площадь: <span class="text-weight-medium">{{ ceilingSquare }} м.</span></div>
-<!--        <div class="text-subtitle1">Натяжной потолок — цена за 1 м.кв.: <span class="text-weight-medium">{{ selectedCeiling.value }} ₽</span></div>-->
-        <div class="flex justify-between text-subtitle1">Натяжной потолок + установка: <span class="text-weight-medium">{{ selectedCeilingSum }} ₽</span></div>
-<!--        <div class="text-subtitle1">Багет — цена за 1 м.<span class="text-weight-medium">{{ baget.price }} ₽</span></div>-->
-        <div class="flex justify-between items-center text-subtitle1" style="gap: 15px;">
-          <span>Багеты</span>
-          <q-input
-            style="width: 110px"
-            v-model.number="baget.count"
-            name="baget"
-            label="метров"
-            :rules="[val => val > 0 || 'Введите метры > 0']"
-          />
-          <span class="text-weight-medium">{{ bagetSum }} ₽</span>
-        </div>
-        <div class="flex justify-between items-center text-subtitle1" style="gap: 15px;">
-          <span>Подлюстренники </span>
-          <q-input
-            style="width: 110px"
-            v-model.number="chandeliers.count"
-            name="chandeliers"
-            label="штук"
-            :rules="[val => val > 0 || 'Введите шт > 0']"
-          />
-          <span class="text-weight-medium">{{ chandeliersSum }} ₽</span>
-        </div>
-        <div class="flex justify-between items-center text-subtitle1" style="gap: 15px;">
-          <span>Светильники </span>
-          <q-input
-            style="width: 110px"
-            v-model.number="luminaire.count"
-            name="luminaire"
-            label="штук"
-            :rules="[val => val > 0 || 'Введите шт > 0']"
-          />
-          <span class="text-weight-medium">{{ luminairesSum }} ₽</span>
-        </div>
-        <div class="flex justify-between items-center text-subtitle1" style="gap: 15px;">
-          <span>Трубы </span>
-          <q-input
-            style="width: 110px"
-            v-model.number="pipes.count"
-            name="pipes"
-            label="штук"
-            :rules="[val => val > 0 || 'Введите шт > 0']"
-          />
-          <span class="text-weight-medium">{{ pipesSum }} ₽</span>
-        </div>
+<!--        <div class="flex justify-between text-subtitle1">Натяжной потолок + установка: <span class="text-weight-medium">{{-->
+<!--            selectedCeilingSum-->
+<!--          }} ₽</span></div>-->
 
-        <div class="flex justify-between text-subtitle1">
-          <span>Доставка:</span>
-          <div>
-            <q-checkbox v-model="isCountDelivery" name="is_count_delivery"/>
-            <span class="text-weight-medium">{{ deliveryPrice }} ₽</span>
-          </div>
-        </div>
+        <q-table
+          class="q-mt-sm"
+          title=""
+          :rows="computedRows"
+          :columns="columns"
+          row-key="name"
+          :pagination="{ rowsPerPage: 0 }"
+          :hide-bottom="true"
+        >
+          <!-- Слот для editable count -->
+          <template v-slot:body-cell-count="props">
+            <q-td :props="props">
+              <div class="row justify-center q-gutter-sm">
+                <!-- убираю инпут для строки с Итого -->
+                <template v-if="!props.row.isFooter">
+                  <q-input
+                    v-model.number="props.row.count"
+                    style="max-width: 110px; "
+                    class=""
+                    dense
+                    outlined
+                    type="number"
+                    placeholder="Количество"
+                  />
+                </template>
+              </div>
+            </q-td>
+          </template>
 
-        <q-separator class="q-ma-sm" />
-        <div class="flex justify-between text-subtitle1">
+          <!-- Слот для computed sum (вычисляем на лету или через функцию) -->
+          <template v-slot:body-cell-sum="props">
+            <q-td :props="props">
+              {{ getSum(props.row) }}
+            </q-td>
+          </template>
+
+        </q-table>
+
+        <div class="flex justify-between q-mt-md text-subtitle1">
           <span class="text-weight-medium">Итоговая сумма:</span>
-          <span class="text-weight-bold">{{ ceilingResult.sum }} ₽</span></div>
-<!--        <div class="text-2xl">{{ ceilingResult.sumInfo }}</div>-->
+          <span class="text-weight-bold">{{ totalSum }} ₽</span></div>
+        <!--        <div class="text-2xl">{{ ceilingResult.sumInfo }}</div>-->
 
         <div class="flex justify-end q-mt-md">
-          <q-btn color="primary" label="Добавить работу" />
+          <q-btn color="primary" label="Добавить работу"/>
         </div>
       </div>
     </div>
@@ -144,41 +129,50 @@ const prices = [
   {id: 12, name: 'Фотопечать до 3.2м', slug: 'photo_printing', price: 3500},
 ];
 
-const baget = ref({
-  count: 10,
-  price: 100,
+const columns = [
+  {name: 'name', label: 'Название', field: 'name', sortable: true, align: 'left'},
+  {name: 'count', label: 'Количество', field: 'count', sortable: true, align: 'center'},  // Editable
+  {name: 'price', label: 'Цена за ед.', field: 'price', sortable: true, align: 'center'},  // Readonly
+  {name: 'sum', label: 'Сумма', field: 'sum', sortable: false, align: 'right'},  // Computed
+];
+
+const rows = ref([
+  {name: 'Потолок + установка', count: 1, price: prices[0].price},
+  {name: 'Багеты', count: 1, price: 55},
+  {name: 'Люстры', count: 1, price: 200},
+  {name: 'Светильники', count: 4, price: 150},
+  {name: 'Вставка', count: 10, price: 30},
+  {name: 'Трубы', count: 1, price: 150},
+  {name: 'Доставка', count: 1, price: 1000}
+]);
+
+// Добавляем виртуальную строку-итог в конец
+const computedRows = computed(() => [
+  {
+    name: rows.value[0].name,
+    count: processedCeilingSquare.value, // rows.value[0].count,
+    price: selectedCeiling.value.value , //rows.value[0].price,
+  },
+  {
+    name: rows.value[1].name,
+    count: processedPerimeter.value, // rows.value[0].count,
+    price: rows.value[1].price , //rows.value[0].price,
+  },
+  ...rows.value.slice(2),  // Все обычные строки
+]);
+
+// Computed как функция (для каждой строки)
+const getSum = computed(() => (row) => {
+  return row.count * row.price;  // Или с форматированием: (row.count * row.price).toFixed(2)
 });
 
-const bagetSum = computed( () => {
-  return baget.value.count * baget.value.price;
+/**
+ * Итоговая сумма после выбора всех параметров.
+ * @type {ComputedRef<number>}
+ */
+const totalSum = computed(() => {
+  return computedRows.value.reduce((acc, row) => acc + getSum.value(row), 0);
 });
-
-const chandeliers = ref({
-  count: 1,
-  price: 300,
-});
-const chandeliersSum = computed( () => {
-  return chandeliers.value.count * chandeliers.value.price;
-});
-
-const luminaire = ref({
-  count: 0,
-  price: 250,
-});
-const luminairesSum = computed( () => {
-  return luminaire.value.count * luminaire.value.price;
-});
-
-const pipes = ref({
-  count: 0,
-  price: 350,
-});
-const pipesSum = computed( () => {
-  return pipes.value.count * pipes.value.price;
-});
-
-const isCountDelivery = ref(true);
-const deliveryPrice = ref(1000);
 
 const perimeter = computed(() => {
   const ch = etalonWalls.value.reduce((prev, wall) => Number(wall.length + prev), 0);
@@ -188,6 +182,38 @@ const perimeter = computed(() => {
 const ceilingSquare = computed(() => {
   return calculatePolygonSquare(etalonWalls.value);
 });
+
+/**
+ * Обработанная сумма в кв.м. натяжного потолка.
+ * Округление идет в большу сторону;
+ * Если квадратура меньше 10 кв.м. то считается 10 кв.м. не важно выходит 9 или 3 кв.м.
+ * @type {ComputedRef<number>}
+ */
+const processedCeilingSquare = computed(() => {
+  let sum = calculatePolygonSquare(etalonWalls.value);
+  sum = Math.ceil(sum);
+  if (sum < 10) sum = 10;
+  return sum;
+});
+
+/**
+ * Обработанная сумма в метрах багетов.
+ * Если число не четное, прибавляют 1 метр.
+ * К полученное числу прибавляю еще 2 метра про запас (~ 110 рублей)
+ * @type {ComputedRef<number>}
+ */
+const processedPerimeter = computed( () => {
+  let val = perimeter.value;
+  val = Math.ceil(val);
+
+  if (val % 2 !== 0){
+    val++;
+  }
+
+  val += 2;
+  return val;
+});
+
 
 /**
  * Подсчет площади многоугольника по формуле Гаусса.
@@ -227,39 +253,32 @@ const priceOptions = prices.map(item => ({
 );
 const selectedCeiling = ref(priceOptions[0]);
 
-const selectedCeilingSum = computed(() => {
-  let square = Math.ceil(ceilingSquare.value);
-  if (square < 10) square = 10;
-  return square * selectedCeiling.value.value;
-})
-
-const ceilingResult = computed( () => {
-  let sum = selectedCeilingSum.value + bagetSum.value + chandeliersSum.value + luminairesSum.value + pipesSum.value +
-    (isCountDelivery.value ? deliveryPrice.value : 0);
-
-  let sumInfo = [];
-  if (ceilingSquare.value){
-    sumInfo.push(`Потолок + установка: ${selectedCeilingSum.value}`);
-  }
-  if (bagetSum.value){
-    sumInfo.push(`Багеты: ${bagetSum.value}`);
-  }
-  if (chandeliersSum.value){
-    sumInfo.push(`Подлюстренники: ${chandeliersSum.value}`);
-  }
-  if (luminairesSum.value){
-    sumInfo.push(`Светильники: ${luminairesSum.value}`);
-  }
-  if (pipesSum.value){
-    sumInfo.push(`Трубы: ${pipesSum.value}`);
-  }
-  if (isCountDelivery.value){
-    sumInfo.push(`Доставка: ${deliveryPrice.value}`);
-  }
-
-
-  return {sum, sumInfo}
-});
+// const ceilingResult = computed(() => {
+//   let sum = selectedCeilingSum.value + bagetSum.value + chandeliersSum.value + luminairesSum.value + pipesSum.value +
+//     (isCountDelivery.value ? deliveryPrice.value : 0);
+//
+//   let sumInfo = [];
+//   if (ceilingSquare.value) {
+//     sumInfo.push(`Потолок + установка: ${selectedCeilingSum.value}`);
+//   }
+//   if (bagetSum.value) {
+//     sumInfo.push(`Багеты: ${bagetSum.value}`);
+//   }
+//   if (chandeliersSum.value) {
+//     sumInfo.push(`Подлюстренники: ${chandeliersSum.value}`);
+//   }
+//   if (luminairesSum.value) {
+//     sumInfo.push(`Светильники: ${luminairesSum.value}`);
+//   }
+//   if (pipesSum.value) {
+//     sumInfo.push(`Трубы: ${pipesSum.value}`);
+//   }
+//   if (isCountDelivery.value) {
+//     sumInfo.push(`Доставка: ${deliveryPrice.value}`);
+//   }
+//
+//   return {sum, sumInfo}
+// });
 
 const resetWalls = () => {
   etalonWalls.value = JSON.parse(JSON.stringify(props.walls));

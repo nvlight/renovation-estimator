@@ -304,6 +304,7 @@
                 commodi magni quaerat ex numquam, dolorum officiis modi facere maiores architecto suscipit iste
                 eveniet doloribus ullam aliquid.
               </div>
+              <job-types-crud-table/>
               <div>{{ roomJobs.roomJobsSum }}</div>
               <div><pre>{{ roomJobs.roomJobs}}</pre></div>
             </q-card-section>
@@ -338,6 +339,7 @@ import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
+import JobTypesCrudTable from "@/components/JobTypes/JobTypesCrudTable.vue";
 
 //const router = userRouter;
 const route = useRoute();
