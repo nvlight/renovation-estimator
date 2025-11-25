@@ -7,16 +7,20 @@ use App\Http\Requests\StoreRoomJobRequest;
 use App\Http\Resources\V1\RoomJobResource;
 use App\Models\Room;
 use App\Models\RoomJob;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RoomJobController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index(Room $room): JsonResponse
     {
+        $this->authorize('viewAny', RoomJob::class);
+
         $jobs = RoomJob::query()->where('room_id', $room->id)->get();
         $result = ['data' => $jobs];
 
@@ -28,6 +32,8 @@ class RoomJobController extends Controller
      */
     public function store(StoreRoomJobRequest $request): JsonResponse
     {
+        $this->authorize('create', RoomJob::class);
+
         $data = $request->validated();
         $roomJob = RoomJob::query()->create($data);
 
@@ -35,26 +41,12 @@ class RoomJobController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Request $request)
-    {
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, RoomJob $roomJobs)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Room $room, RoomJob $roomJob): JsonResponse
     {
+        $this->authorize('delete', $roomJob);
+
         try {
             $success = $roomJob->delete();
             return response()->json([

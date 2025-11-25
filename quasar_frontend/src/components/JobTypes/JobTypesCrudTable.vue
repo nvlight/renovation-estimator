@@ -20,10 +20,11 @@
       </q-td>
     </template>
   </q-table>
+<!--  <div><pre>{{ roomJobsStore.roomJobs }}</pre></div>-->
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
 
 const props = defineProps({
@@ -35,7 +36,6 @@ const props = defineProps({
 
 const roomJobsStore = useRoomJobsStore();
 const roomId = ref(props.roomId);
-const roomJobs = ref([]);
 
 const columns = [
   {
@@ -55,28 +55,50 @@ const columns = [
   {name: 'actions', label: 'Действия', field: 'actions'},
 ]
 
-const rows = ref([]);
+const formatMoreInfo = (moreInfo) => {
+  if (!moreInfo || !Array.isArray(moreInfo)) return '[]';
 
-const fillRoomJobs = () => {
-  rows.value = roomJobs.value.data.map(item => ({
-    id: item.id,
-    roomId: item.room_id,
-    title: item.title,
-    sum: item.sum,
-    moreInfo: item.more_info,
-  }));
+  return '[' + moreInfo.map(obj => {
+    if (typeof obj === 'object' && obj !== null) {
+      const parts = [];
+
+      // Добавляем поля в нужном порядке с переименованием и проверкой на существование
+      if (obj.name !== undefined && obj.name !== null && obj.name !== '') {
+        parts.push(`${obj.name}`);
+      }
+      if (obj.price !== undefined && obj.price !== null) {
+        parts.push(`цена: ${obj.price}`);
+      }
+      if (obj.amount !== undefined && obj.amount !== null) {
+        parts.push(`количество: ${obj.amount}`);
+      }
+      if (obj.sum !== undefined && obj.sum !== null) {
+        parts.push(`сумма: ${obj.sum}`);
+      }
+
+      // Если нет ни одного поля, возвращаем пустую строку
+      return parts.length > 0 ? parts.join(', ') : '';
+    }
+    return String(obj);
+  }).filter(str => str !== '').join('; ') + ']'; // Фильтруем пустые строки
 };
 
+const rows = computed(() =>  {
+  return roomJobsStore.roomJobs.map(item => ({
+    id: item.id,
+    room_id: item.room_id,
+    title: item.title,
+    sum: item.sum,
+    moreInfo: formatMoreInfo(item.more_info),
+  }));
+});
+
 const deleteJob = async (row) => {
-  const success = await roomJobsStore.deleteRoomJob(roomId.value, row.id)
-  if (success){
-    rows.value = rows.value.filter(r => r.id !== row.id)
-  }
+  await roomJobsStore.deleteRoomJob(roomId.value, row.id)
 }
 
 onMounted(async () => {
-  roomJobs.value = await roomJobsStore.loadRoomJobs(roomId.value);
-  fillRoomJobs();
+  await roomJobsStore.loadRoomJobs(roomId.value);
 });
 </script>
 

@@ -15,6 +15,7 @@ class RoomJobResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'room_id' => $this->room_id,
             'title' => $this->title,
             'sum' => $this->sum,

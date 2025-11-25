@@ -104,14 +104,22 @@
 
 <script setup>
 import {ref, defineProps, onMounted, watch, computed} from 'vue'
+import {useRoomJobsStore} from "@/stores/roomJobs.js";
 
 const props = defineProps({
+  roomId: {
+    type: Number,
+    required: true,
+  },
   walls: {
     type: Array,
     required: false,
     default: () => [],
   }
 })
+
+const roomJobsStore = useRoomJobsStore();
+const roomId = ref(props.roomId);
 
 const etalonWalls = ref([]);
 
@@ -142,9 +150,9 @@ const rows = ref([
   {name: 'Потолок + установка', count: 1, price: prices[0].price},
   {name: 'Багеты', count: 1, price: 55},
   {name: 'Люстры', count: 1, price: 200},
-  {name: 'Светильники', count: 4, price: 150},
-  {name: 'Вставка', count: 10, price: 30},
-  {name: 'Трубы', count: 1, price: 150},
+  {name: 'Светильники', count: 0, price: 150},
+  {name: 'Вставка', count: 0, price: 30},
+  {name: 'Трубы', count: 0, price: 150},
   {name: 'Доставка', count: 1, price: 1000}
 ]);
 
@@ -163,12 +171,25 @@ const computedRows = computed(() => [
 ]);
 
 const computedRowSumsInfo = computed( () => {
-  return computedRows.value.map(item => ({
+  return computedRows.value
+    .filter(item => {
+      return item && typeof item.count === 'number' && item.count > 0;
+    })
+    .map(item => ({
       name: item.name,
       amount: item.count,
       price: item.price,
       sum: item.price * item.count,
     }));
+});
+
+const computedStoreInfo = computed( () => {
+  return {
+    room_id: roomId.value,
+    sum: totalSum.value,
+    title: 'Натяжной потолок',
+    more_info: computedRowSumsInfo.value,
+  }
 });
 
 // Computed как функция (для каждой строки)
@@ -271,7 +292,7 @@ const priceOptions = prices.map(item => ({
 const selectedCeiling = ref(priceOptions[0]);
 
 const addJob = () => {
-  computedRowSumsInfo.value;
+  roomJobsStore.addRoomJob(roomId.value, computedStoreInfo.value);
 };
 
 const resetWalls = () => {

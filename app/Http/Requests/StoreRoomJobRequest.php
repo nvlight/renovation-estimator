@@ -25,7 +25,11 @@ class StoreRoomJobRequest extends FormRequest
             'room_id' => 'required|integer|exists:rooms,id',
             'title' => 'required|string',
             'sum' => 'required|integer',
-            'more_info' => 'required|string:222',
+            'more_info' => 'required|array',
+            'more_info.*.name' => 'required|string',
+            'more_info.*.amount' => 'required|integer',
+            'more_info.*.price' => 'required|integer',
+            'more_info.*.sum' => 'required|integer',
         ];
     }
 }

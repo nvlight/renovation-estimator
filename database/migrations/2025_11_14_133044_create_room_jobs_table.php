@@ -17,7 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('room_id');
             $table->string('title', 111)->default('');
             $table->bigInteger('sum')->default(0);
-            $table->string('more_info', 222)->default('');
+            //$table->string('more_info', 222)->default('');
+            $table->jsonb('more_info')->nullable();
 
             $table->timestamps();
             $table->foreign('room_id')->references('id')->on('rooms')->onDelete('CASCADE');

@@ -9,7 +9,9 @@ export const useRoomJobsStore = defineStore('roomJobs', {
 
   // Геттеры
   getters: {
-    roomJobsSum: () => 250000,
+    roomJobsSum() {  // Обычная функция, чтобы this работал
+      return this.roomJobs.reduce((acc, item) => acc + (item.sum || 0), 0);
+    },
   },
 
   // Действия
@@ -24,15 +26,16 @@ export const useRoomJobsStore = defineStore('roomJobs', {
         throw error.response?.data || { message: 'Load room jobs failed' };
       }
     },
-    async addRoom(roomData) {
+    async addRoomJob(room_id, roomJobData) {
       try {
-        const addRoom = await api.post(`/v1/project/${roomData.project_id}/rooms`, roomData);
+        const addRoom = await api.post(`/v1/room/${room_id}/roomJob`, roomJobData);
         if (addRoom) {
-          this.rooms.unshift(addRoom.data);
+          this.roomJobs.push(addRoom.data);
         }
         return addRoom;
       } catch (error) {
-        throw error.response || {message: 'add room failed'};
+        console.log(error.response?.data || {message: 'store room job failed'})
+        return false;
       }
     },
     async deleteRoomJob(room_id, jobId) {

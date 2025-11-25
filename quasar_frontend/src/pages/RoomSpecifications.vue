@@ -34,7 +34,7 @@
       <q-card class="">
         <div class="text-subtitle1 text-weight-bold">Общая стоимость: <span class="text-weight-medium">235 000 <span v-html="rrub"></span> </span></div>
         <div class="text-subtitle1">Строительные материалы: <span class="text-weight-medium">110 000 <span v-html="rrub"></span></span></div>
-        <div class="text-subtitle1">Работа мастеров: <span class="text-weight-medium">125 000 <span v-html="rrub"></span></span></div>
+        <div class="text-subtitle1">Работа мастеров: <span class="text-weight-medium">{{ roomJobsStore.roomJobsSum }} <span v-html="rrub"></span></span></div>
       </q-card>
     </q-card>
 
@@ -275,7 +275,7 @@
             <q-tab-panels v-model="job_types_tabs" animated>
 
               <q-tab-panel name="stretch_ceiling">
-                <stretch-ceiling-calc :walls="walls"/>
+                <stretch-ceiling-calc :walls="walls" :room-id="roomId"/>
               </q-tab-panel>
 
               <q-tab-panel name="drywall">
@@ -332,9 +332,11 @@ import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
 import JobTypesCrudTable from "@/components/JobTypes/JobTypesCrudTable.vue";
+import {useRoomJobsStore} from "@/stores/roomJobs.js";
 
 //const router = userRouter;
 const route = useRoute();
+const roomJobsStore = useRoomJobsStore();
 
 const rrub = '&#8381;';
 
