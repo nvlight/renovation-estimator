@@ -55,7 +55,12 @@ const routes = [
         component: () => import('@/pages/TestWallsBuilder.vue'),
         meta: { requiresAuth: false }, // Только для аутентифицированных
       },
-
+      {
+        path: 'materials',
+        name: 'Materials',
+        component: () => import('@/pages/MaterialsPage.vue'),
+        meta: { requiresAuth: true }, // Только для аутентифицированных
+      },
     ],
   },
 
