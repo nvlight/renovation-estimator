@@ -98,13 +98,17 @@
         </div>
       </div>
     </div>
+  </div>
 
+  <div>
+    <stretch-ceiling-building-materials/>
   </div>
 </template>
 
 <script setup>
 import {ref, defineProps, onMounted, watch, computed} from 'vue'
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
+import StretchCeilingBuildingMaterials from "@/components/BuildingMaterialCalcs/StretchCeilingBuildingMaterials.vue";
 
 const props = defineProps({
   roomId: {
