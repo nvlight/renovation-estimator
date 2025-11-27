@@ -11,7 +11,7 @@ class StoreMaterialRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +22,18 @@ class StoreMaterialRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => ['required', 'string:max:255|min:3'],
+            'description' => ['required', 'string:max:555|min:3'],
+            'price' => ['nullable', 'numeric', 'min:0', 'decimal:0,2', 'max:99999999.99'],
+            'product_code' => ['required', 'integer'],
+            'is_free' => 'nullable|boolean',
+
+            'characteristics' => ['required', 'array'],
+            //'advantages',
+            //'packaging_info',
+
+            'brand' => ['nullable', 'string:max:111'],
+            'producing_country' => ['nullable', 'string:max:111'],
         ];
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\MaterialController;
+use App\Http\Controllers\Api\V1\MaterialImageController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\RoomController;
 use App\Http\Controllers\Api\V1\RoomJobController;
@@ -19,4 +20,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('v1/material', MaterialController::class);
+    Route::apiResource('v1/material_image', MaterialImageController::class);
 });

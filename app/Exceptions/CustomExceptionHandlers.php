@@ -14,6 +14,8 @@ return function (Exceptions $exceptions) {
                     'App\\Models\\Project' => 'Проект не найден',
                     'App\\Models\\Room' => 'Комната не найдена',
                     'App\\Models\\RoomWall' => 'Стена комнаты не найдена',
+                    'App\\Models\\Material' => 'Материал не найден',
+                    'App\\Models\\MaterialImage' => 'Картинка материала не найдена',
                     default => 'Ресурс не найден',
                 };
                 return response()->json(['message' => $message], 404);

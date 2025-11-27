@@ -13,7 +13,7 @@ class MaterialController extends Controller
 {
     public function index(): JsonResponse
     {
-        // авторизация, может нужно добавить middleware с полем user.role === ADMIN
+        // todo: авторизация, может нужно добавить middleware с полем user.role === ADMIN
 
         $materials = Material::query()
             ->orderBy('title')
@@ -22,9 +22,13 @@ class MaterialController extends Controller
         return MaterialResource::collection($materials)->response();
     }
 
-    public function store(StoreMaterialRequest $request)
+    public function store(StoreMaterialRequest $request): JsonResponse
     {
-        //
+        $data = $request->validated();
+
+        Material::query()->create($data);
+
+        return response()->json(['success' => 1], 201);
     }
 
     public function show(Material $material)
@@ -39,8 +43,6 @@ class MaterialController extends Controller
 
     public function destroy(Material $material): JsonResponse
     {
-        // авторизация
-
         $material->delete();
 
         return response()->json(['message' => 'Материал удалён']);
