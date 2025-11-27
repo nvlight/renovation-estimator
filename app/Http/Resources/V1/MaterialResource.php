@@ -26,6 +26,7 @@ class MaterialResource extends JsonResource
             "packaging_info" => $this->packaging_info,
             "brand" => $this->brand,
             "producing_country" => $this->producing_country,
+            "images" => MaterialImageResource::collection($this->images),
         ];
     }
 }

@@ -25,6 +25,15 @@ export const useMaterialsStore = defineStore('materials', {
         return false;
       }
     },
+    async showItem(item_id) {
+      try {
+        const response = await api.get(`/v1/material/${item_id}`);
+        return response.data;
+      } catch (error) {
+        console.log(error.response?.data || {message: 'load material failed'})
+        throw error;
+      }
+    },
     async addItem(room_id, roomJobData) {
       try {
         const addRoom = await api.post(`/v1/room/${room_id}/roomJob`, roomJobData);
@@ -46,7 +55,7 @@ export const useMaterialsStore = defineStore('materials', {
         return true;
       } catch (error) {
         console.log(error.response?.data || {message: 'delete material failed'})
-        return false;
+        throw error;
       }
     },
   },

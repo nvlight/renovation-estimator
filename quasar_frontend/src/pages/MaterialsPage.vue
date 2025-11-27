@@ -19,10 +19,18 @@
             <q-btn
               flat
               round
-              size="sm"
+              size="md"
               color="negative"
               icon="delete"
               @click="deleteMaterial(props.row)"
+            />
+            <q-btn
+              flat
+              round
+              size="md"
+              color="blue"
+              icon="visibility"
+              @click="viewMaterial(props.row)"
             />
           </q-td>
         </template>
@@ -37,7 +45,10 @@
 <script setup>
 import {computed, onMounted} from "vue";
 import {useMaterialsStore} from "@/stores/materials.js";
+import {Notify} from "quasar";
+import {useRouter} from "vue-router";
 
+const router = useRouter();
 const materialsStore = useMaterialsStore();
 
 const columns = [
@@ -69,8 +80,27 @@ const rows = computed( () => {
   });
 });
 
+const viewMaterial = (row) => {
+  router.push({name: 'MaterialDetail', params: { material_id: row.id }});
+}
+
 const deleteMaterial = (row) => {
-  materialsStore.deleteItem(row.id);
+  if (!confirm('Действительно удалить строительный материал?')) {
+    return;
+  }
+
+  const del = materialsStore.deleteItem(row.id);
+  del.then( () => {
+    Notify.create({
+      type: 'positive',
+      message: 'Строительный материал удален!',
+    });
+  }).catch( () => {
+    Notify.create({
+      type: 'negative',
+      message: 'Ошибка при удалении!',
+    });
+  });
 }
 
 onMounted( () => {

@@ -61,6 +61,14 @@ const routes = [
         component: () => import('@/pages/MaterialsPage.vue'),
         meta: { requiresAuth: true }, // Только для аутентифицированных
       },
+      // Новый отдельный роут для деталей (независимый, без children)
+      {
+        path: 'material/:material_id', // Полный путь: /material/123 (не /materials/123)
+        name: 'MaterialDetail',
+        component: () => import('@/pages/MaterialView.vue'), // Ваш компонент
+        meta: { requiresAuth: true }, // Аутентификация
+        props: true // Передаёт material_id как пропс в компонент
+      }
     ],
   },
 

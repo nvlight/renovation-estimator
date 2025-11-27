@@ -104,4 +104,7 @@ export const API_CONFIG = {
 <pre><code>sail artisan db:seed</code></pre>
 После этого можно войти в систему, используя любого пользователя из таблицы users. Паролем будет password
 
+Для сохранения картинок например нужно сделать символические ссылки:
+<pre><code>sail artisan storage:link</code></pre>
+
 #### все готово! 

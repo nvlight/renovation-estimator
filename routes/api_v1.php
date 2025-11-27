@@ -20,5 +20,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('v1/material', MaterialController::class);
+
     Route::apiResource('v1/material_image', MaterialImageController::class);
+
+    Route::patch('v1/material_image/{material_image}/to_left', [MaterialImageController::class, 'toLeft'])
+        ->name('material_image.to_left');
+    Route::patch('v1/material_image/{material_image}/to_right', [MaterialImageController::class, 'toRight'])
+        ->name('material_image.to_right');
 });

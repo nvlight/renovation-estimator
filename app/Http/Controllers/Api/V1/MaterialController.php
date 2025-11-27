@@ -31,9 +31,9 @@ class MaterialController extends Controller
         return response()->json(['success' => 1], 201);
     }
 
-    public function show(Material $material)
+    public function show(Material $material): JsonResponse
     {
-        //
+        return response()->json(new MaterialResource($material));
     }
 
     public function update(UpdateMaterialRequest $request, Material $material)
