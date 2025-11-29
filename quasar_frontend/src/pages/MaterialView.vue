@@ -51,7 +51,33 @@
       </div>
     </div>
 
-<!--    <div><pre>{{ material?.images }}</pre></div>-->
+    <!--    <div><pre>{{ material?.images }}</pre></div>-->
+
+    <!-- upload images -->
+    <div class="q-ma-md ">
+      <q-uploader
+        ref="uploaderRef"
+        max-files="1"
+        accept="image/*"
+        :auto-upload="false"
+        :max-file-size="20000000"
+        @added="checkImageDimensions"
+        @removed="onFileRemoved"
+        label="Выберите изображение (макс. 1200x800 px)"
+        square
+        flat
+        bordered
+        style="max-width: 300px"
+      />
+
+      <q-btn
+        label="Отправить на сервер"
+        @click="submitFile"
+        color="primary"
+        class="q-mt-md"
+        :disable="!selectedFile"
+      />
+    </div>
   </q-page>
 </template>
 
@@ -89,8 +115,8 @@ const columns = [
 const rows = ref([]);
 
 const materialId = route.params.material_id;
-
 const material = ref({});
+
 const loadMaterial = (materialId) => {
   materialStore.showItem(materialId).then(response => {
     material.value = response;
@@ -108,19 +134,18 @@ const loadMaterial = (materialId) => {
   });
 }
 
-
-const sortedImages = computed ( () => {
-    if (!material.value.images || !Array.isArray(material.value.images)) {
-      return [];
-    }
-    return [...material.value.images].sort((a, b) => a.sort - b.sort);
+const sortedImages = computed(() => {
+  if (!material.value.images || !Array.isArray(material.value.images)) {
+    return [];
+  }
+  return [...material.value.images].sort((a, b) => a.sort - b.sort);
 });
 
 const deleteMaterialImage = async (material_image_id) => {
   if (!confirm('Действительно удалить?')) return;
 
   const del = await api.delete(`/v1/material_image/${material_image_id}`);
-  if (del?.status === 200){
+  if (del?.status === 200) {
 
     material.value.images = material.value.images.filter(item => item.id !== material_image_id);
 
@@ -128,7 +153,7 @@ const deleteMaterialImage = async (material_image_id) => {
       type: 'positive',
       message: 'Картинка удалена!',
     });
-  }else{
+  } else {
     Notify.create({
       type: 'negative',
       message: 'Ошибка при удалении!',
@@ -139,15 +164,92 @@ const deleteMaterialImage = async (material_image_id) => {
 const moveMaterialImage = async (material_image_id, direction) => {
   const api_dir = direction === 'left' ? 'left' : 'right';
   const move = await api.patch(`/v1/material_image/${material_image_id}/to_${api_dir}`);
-  if (move?.status === 200 && move.data.success){
+  if (move?.status === 200 && move.data.success) {
     material.value.images = move.data.images;
   }
 }
 
-
 onMounted(() => {
   loadMaterial(materialId);
 });
+
+
+// Код ниже отвечает за сохранения картинки
+// Реактивные данные
+const uploaderRef = ref(null)
+const selectedFile = ref(null)
+
+// Методы
+const checkImageDimensions = (files) => {
+  const file = files[0]
+  const img = new Image()
+
+  img.onload = () => {
+    if (img.width > 1200 || img.height > 800) {
+      Notify.create({
+        type: 'negative',
+        message: 'Размер изображения не должен превышать 1200x800 px'
+      })
+      uploaderRef.value.removeFile(file)
+    } else {
+      selectedFile.value = file
+    }
+    URL.revokeObjectURL(img.src)
+  }
+
+  img.onerror = () => {
+    Notify.create({
+      type: 'negative',
+      message: 'Файл не является изображением'
+    })
+    uploaderRef.value.removeFile(file)
+    URL.revokeObjectURL(img.src)
+  }
+
+  img.src = URL.createObjectURL(file)
+}
+
+const onFileRemoved = () => {
+  selectedFile.value = null
+}
+
+const submitFile = async () => {
+  if (!selectedFile.value) {
+    Notify.create({
+      type: 'warning',
+      message: 'Сначала выберите файл'
+    })
+    return
+  }
+
+  try {
+    const formData = new FormData()
+    formData.append('name', selectedFile.value);
+    formData.append('material_id', materialId);
+
+    const result = await api.post('/v1/material_image/', formData);
+    if (result.status === 201){
+      material.value.images = result.data.images;
+    }
+
+    Notify.create({
+      type: 'positive',
+      message: 'Файл успешно загружен'
+    })
+
+    // Очищаем после успешной загрузки
+    uploaderRef.value.removeQueuedFiles()
+    selectedFile.value = null
+
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: 'Ошибка загрузки файла'
+    })
+    console.error('Upload error:', error)
+  }
+}
+
 </script>
 
 <style scoped>

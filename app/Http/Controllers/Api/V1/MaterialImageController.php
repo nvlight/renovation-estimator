@@ -33,9 +33,13 @@ class MaterialImageController extends Controller
             $validated['name'] = $path;
         }
 
-        MaterialImage::query()->create($validated);
+        $materialImage = MaterialImage::query()->create($validated);
+        $images = $materialImage->material->images;
 
-        return response()->json(['success' => 1], 201);
+        return response()->json([
+            'success' => 1,
+            'images' => MaterialImageResource::collection($images),
+        ], 201);
     }
 
     public function show(MaterialImage $materialImage)
