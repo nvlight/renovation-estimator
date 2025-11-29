@@ -80,10 +80,12 @@ class MaterialImageController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Элемент сдвинут влево'
+                'message' => 'Элемент сдвинут влево',
+                'images' => MaterialImageResource::collection($materialImage->material->images),
             ]);
 
         } catch (\Exception $e) {
+            logger()->error($e);
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка при сдвиге элемента: ' . $e->getMessage()
@@ -123,10 +125,12 @@ class MaterialImageController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Элемент сдвинут вправо'
+                'message' => 'Элемент сдвинут вправо',
+                'images' => MaterialImageResource::collection($materialImage->material->images),
             ]);
 
         } catch (\Exception $e) {
+            logger()->error($e);
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка при сдвиге элемента: ' . $e->getMessage()

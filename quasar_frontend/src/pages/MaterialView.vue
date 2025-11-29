@@ -10,11 +10,11 @@
     >
     </q-table>
 
-    <div v-if="material.images"
+    <div v-if="sortedImages"
          class="flex q-mt-md"
          style="gap: 10px;"
     >
-      <div v-for="(item,i) in material.images" :key="i">
+      <div v-for="(item,i) in sortedImages" :key="i">
         <img
           :src="item.url"
           width="200px"
@@ -28,7 +28,7 @@
             size="md"
             color="positive"
             icon="chevron_left"
-            @click="deleteMaterialImage(item.id)"
+            @click="moveMaterialImage(item.id,'left')"
           />
           <q-btn
             flat
@@ -36,7 +36,7 @@
             size="md"
             color="positive"
             icon="chevron_right"
-            @click="deleteMaterialImage(item.id)"
+            @click="moveMaterialImage(item.id,'right')"
           />
 
           <q-btn
@@ -51,13 +51,13 @@
       </div>
     </div>
 
-    <div><pre>{{ material?.images }}</pre></div>
+<!--    <div><pre>{{ material?.images }}</pre></div>-->
   </q-page>
 </template>
 
 <script setup>
 import {useRoute} from 'vue-router';
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {useMaterialsStore} from "@/stores/materials.js";
 import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
@@ -108,7 +108,17 @@ const loadMaterial = (materialId) => {
   });
 }
 
+
+const sortedImages = computed ( () => {
+    if (!material.value.images || !Array.isArray(material.value.images)) {
+      return [];
+    }
+    return [...material.value.images].sort((a, b) => a.sort - b.sort);
+});
+
 const deleteMaterialImage = async (material_image_id) => {
+  if (!confirm('Действительно удалить?')) return;
+
   const del = await api.delete(`/v1/material_image/${material_image_id}`);
   if (del?.status === 200){
 
@@ -125,6 +135,15 @@ const deleteMaterialImage = async (material_image_id) => {
     });
   }
 }
+
+const moveMaterialImage = async (material_image_id, direction) => {
+  const api_dir = direction === 'left' ? 'left' : 'right';
+  const move = await api.patch(`/v1/material_image/${material_image_id}/to_${api_dir}`);
+  if (move?.status === 200 && move.data.success){
+    material.value.images = move.data.images;
+  }
+}
+
 
 onMounted(() => {
   loadMaterial(materialId);
