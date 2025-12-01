@@ -1,6 +1,12 @@
 <template>
   <q-page class="q-ma-md">
-    <h5>MaterialView</h5>
+    <q-breadcrumbs>
+      <q-breadcrumbs-el label="Проекты" :to="{name: 'Materials'}"/>
+      <q-breadcrumbs-el :label="`Проект ${materialId}`" />
+    </q-breadcrumbs>
+
+    <h5>Просмотр материала ({{ materialId }})</h5>
+
     <q-table
       title=""
       :rows="rows"
