@@ -21,6 +21,7 @@ class RoomJobController extends Controller
     {
         $this->authorize('viewAny', RoomJob::class);
 
+        // todo: эта ярунда не будет работать правильным образом, исправить!
         $jobs = RoomJob::query()->where('room_id', $room->id)->get();
         $result = ['data' => $jobs];
 

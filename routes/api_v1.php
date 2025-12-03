@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('v1/room/{room}')->group(function () {
         Route::apiResource('roomJob', RoomJobController::class);
+        Route::apiResource('roomMaterial', RoomMaterialController::class);
     });
 
     Route::apiResource('v1/material', MaterialController::class);
@@ -27,6 +28,4 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('material_image.to_left');
     Route::patch('v1/material_image/{material_image}/to_right', [MaterialImageController::class, 'toRight'])
         ->name('material_image.to_right');
-
-    Route::apiResource('v1/room_material', RoomMaterialController::class);
 });

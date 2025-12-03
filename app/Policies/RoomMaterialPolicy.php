@@ -11,9 +11,9 @@ class RoomMaterialPolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user, $room): bool
     {
-        return false;
+        return $room->project->user->id === $user->id;
     }
 
     /**

@@ -15,8 +15,11 @@ class RoomMaterialResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'room_id' => $this->room_id,
             'material_id' => $this->material_id,
+            'room_title' => $this->room->name,
+            'material_title' => $this->material->title,
             'amount' => $this->amount,
             'sum' => $this->sum,
             'notice' => $this->notice,

@@ -299,7 +299,7 @@
         >
           <q-card>
             <q-card-section>
-              <job-types-crud-table :room-id="roomId"/>
+              <room-jobs :room-id="roomId"/>
             </q-card-section>
           </q-card>
         </q-expansion-item>
@@ -313,9 +313,7 @@
         >
           <q-card>
             <q-card-section>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quidem, eius reprehenderit eos corrupti
-              commodi magni quaerat ex numquam, dolorum officiis modi facere maiores architecto suscipit iste
-              eveniet doloribus ullam aliquid.
+              <room-materials :room-id="roomId"/>
             </q-card-section>
           </q-card>
         </q-expansion-item>
@@ -331,8 +329,9 @@ import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
 import {Notify} from "quasar";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
-import JobTypesCrudTable from "@/components/JobTypes/JobTypesCrudTable.vue";
+import RoomJobs from "@/components/RoomJobs.vue";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
+import RoomMaterials from "@/components/RoomMaterials.vue";
 
 //const router = userRouter;
 const route = useRoute();

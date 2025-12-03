@@ -48,7 +48,7 @@ export const useMaterialsStore = defineStore('materials', {
     },
     async deleteItem(item_id) {
       try {
-        const deleted = await api.delete(`/v1/material/${item_id}`);
+        const deleted = await api.delete(`/v1/room_material/${item_id}`);
         if (deleted) {
           this.items = this.items.filter(pr => pr.id !== item_id);
         }

@@ -26,8 +26,17 @@ class Room extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function roomJobs(): HasMany
+    {
+        return $this->hasMany(RoomJob::class);
+    }
+
     public function room_walls(): HasMany
     {
         return $this->hasMany(RoomWall::class, 'room_id');
+    }
+
+    public function room_materials(): HasMany{
+        return $this->hasMany(RoomMaterial::class, 'room_id');
     }
 }

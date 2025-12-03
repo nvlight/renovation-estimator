@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomMaterialRequest;
 use App\Http\Requests\UpdateRoomMaterialRequest;
 use App\Http\Resources\V1\RoomMaterialResource;
+use App\Models\Room;
 use App\Models\RoomMaterial;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class RoomMaterialController extends Controller
 {
@@ -17,9 +19,20 @@ class RoomMaterialController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Room $room): JsonResponse
     {
-        $roomMaterials = RoomMaterial::query()->paginate();
+        $this->authorize('viewAny', [RoomMaterial::class, $room]);
+
+//        $userId = Auth::id();
+//        $roomMaterials = RoomMaterial::whereHas('room.project.user', function ($query) use ($userId) {
+//            $query->where('id', $userId);
+//        })
+//            ->with('material')
+//            ->paginate();
+
+        $roomMaterials = RoomMaterial::query()
+            ->where('room_id', $room->id)
+            ->paginate();
 
         return RoomMaterialResource::collection($roomMaterials)->response();
     }
@@ -55,7 +68,7 @@ class RoomMaterialController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(RoomMaterial $roomMaterial): JsonResponse
+    public function destroy(Room $room, RoomMaterial $roomMaterial): JsonResponse
     {
         $this->authorize('delete', $roomMaterial);
 
