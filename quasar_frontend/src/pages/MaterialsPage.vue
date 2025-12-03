@@ -103,9 +103,18 @@ const deleteMaterial = (row) => {
   });
 }
 
+const documentTitle = computed(() => {
+  return 'Строительные материалы';
+});
+
 onMounted( () => {
   materialsStore.loadItems();
 });
+
+onMounted(() => {
+  document.title = documentTitle.value;
+});
+
 </script>
 
 <style scoped>

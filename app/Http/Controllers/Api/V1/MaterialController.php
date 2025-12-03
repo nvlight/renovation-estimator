@@ -17,7 +17,7 @@ class MaterialController extends Controller
 
         $materials = Material::query()
             ->orderBy('title')
-            ->paginate();
+            ->paginate($perPage = 55);
 
         return MaterialResource::collection($materials)->response();
     }

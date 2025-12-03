@@ -143,10 +143,10 @@ const checkImageDimensions = (file) => {
   reader.onload = (e) => {
     const img = new Image()
     img.onload = () => {
-      if (img.naturalWidth > 1200 || img.naturalHeight > 800) {
+      if (img.naturalWidth > 1200 || img.naturalHeight > 925) {
         Notify.create({
           type: 'negative',
-          message: 'Изображение слишком большое (макс. 1200x800 px)'
+          message: 'Изображение слишком большое (макс. 1200x925 px)'
         })
 
         uploaderRef.value.removeFile(file)
@@ -178,9 +178,6 @@ const onFileAdded = (files) => {
   checkImageDimensions(file)
 }
 
-onMounted(() => {
-});
-
 // Каждый раз при изменении props.images
 watch(
   () => props.images,
@@ -189,6 +186,14 @@ watch(
   },
   {immediate: true} // важное! заполнит localImages сразу
 );
+
+const documentTitle = computed(() => {
+  return 'Строительные материалы';
+});
+
+onMounted(() => {
+  document.title = documentTitle.value;
+});
 
 </script>
 

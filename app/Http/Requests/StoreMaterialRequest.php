@@ -22,15 +22,20 @@ class StoreMaterialRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string:max:255|min:3'],
-            'description' => ['required', 'string:max:555|min:3'],
+            'parent_id' => ['nullable', 'integer', 'min:0'],
+
+            'title' => ['required', 'string', 'max:255', 'min:3'],
+            'description' => ['nullable', 'string', 'max:555'],
+            'product_url' => ['nullable', 'string', 'max:255'],
+
             'price' => ['nullable', 'numeric', 'min:0', 'decimal:0,2', 'max:99999999.99'],
-            'product_code' => ['required', 'integer'],
+
+            'product_code' => ['nullable', 'integer'],
             'is_free' => 'nullable|boolean',
 
-            'characteristics' => ['required', 'array'],
-            //'advantages',
-            //'packaging_info',
+            'characteristics' => ['nullable', 'array'],
+            'advantages' => ['nullable', 'array'],
+            'packaging_info' => ['nullable', 'array'],
 
             'brand' => ['nullable', 'string:max:111'],
             'producing_country' => ['nullable', 'string:max:111'],

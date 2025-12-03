@@ -16,13 +16,14 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
 
             $table->string('title')->comment('короткое описание товара');;
-            $table->string('description', 555)->comment('длинное описание товара');
-            $table->unsignedInteger('product_code')->comment('код продукта');
+            $table->string('description', 555)->nullable()->comment('длинное описание товара');
+            $table->unsignedInteger('product_code')->nullable()->comment('код продукта');
+            $table->string('product_url')->nullable()->comment('ссылка на товар');
 
             $table->decimal('price', 12, 2)->nullable()->comment('цена товара');
             $table->boolean('is_free')->default(false)->comment('флаг для бесплатного товара');
-            $table->jsonb('characteristics')->comment('характеристики товара');
 
+            $table->jsonb('characteristics')->nullable()->comment('характеристики товара');
             $table->json('advantages')->nullable()->comment('Преимущества продукта в формате массива');
             $table->json('packaging_info')->nullable()->comment('Информация об упаковке');
 

@@ -1,8 +1,8 @@
 <template>
   <q-page class="q-ma-md">
     <q-breadcrumbs>
-      <q-breadcrumbs-el label="Проекты" :to="{name: 'Materials'}"/>
-      <q-breadcrumbs-el :label="`Проект ${materialId}`" />
+      <q-breadcrumbs-el label="Строительные материалы" :to="{name: 'Materials'}"/>
+      <q-breadcrumbs-el :label="`Материал ${materialId}`" />
     </q-breadcrumbs>
 
     <h5>{{ materialTitle }} (id={{ materialId }})</h5>
@@ -80,8 +80,13 @@ const materialTitle = computed(() => {
   return rows.value.filter(i => i.key === 'title')[0]?.value;
 })
 
+const documentTitle = computed(() => {
+  return `Просмотр материала (id=${materialId})`;
+});
+
 onMounted(() => {
   loadMaterial(materialId);
+  document.title = documentTitle.value;
 });
 
 </script>
