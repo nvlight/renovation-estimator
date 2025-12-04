@@ -21,7 +21,7 @@ class RoomMaterialResource extends JsonResource
             'room_title' => $this->room->name,
             'material_title' => $this->material->title,
             'amount' => $this->amount,
-            'sum' => $this->sum,
+            'sum' => (int)$this->sum,
             'notice' => $this->notice,
         ];
     }

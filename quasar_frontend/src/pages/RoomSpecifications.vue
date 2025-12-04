@@ -32,9 +32,9 @@
         <div class="text-subtitle1">Площадь пола: <span class="text-weight-medium">{{ ceilingSquare }} м.кв. </span></div>
       </q-card>
       <q-card class="">
-        <div class="text-subtitle1 text-weight-bold">Общая стоимость: <span class="text-weight-medium">235 000 <span v-html="rrub"></span> </span></div>
-        <div class="text-subtitle1">Строительные материалы: <span class="text-weight-medium">110 000 <span v-html="rrub"></span></span></div>
-        <div class="text-subtitle1">Работа мастеров: <span class="text-weight-medium">{{ roomJobsStore.roomJobsSum }} <span v-html="rrub"></span></span></div>
+        <div class="text-subtitle1 text-weight-bold">Общая стоимость: <span class="text-weight-medium">{{ totalSum.toLocaleString('ru-RU') }} <span v-html="rrub"></span> </span></div>
+        <div class="text-subtitle1">Строительные материалы: <span class="text-weight-medium">{{ roomMaterialsStore.roomMaterialsSum.toLocaleString('ru-RU') }} <span v-html="rrub"></span></span></div>
+        <div class="text-subtitle1">Работа мастеров: <span class="text-weight-medium">{{ roomJobsStore.roomJobsSum.toLocaleString('ru-RU') }} <span v-html="rrub"></span></span></div>
       </q-card>
     </q-card>
 
@@ -332,10 +332,13 @@ import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vu
 import RoomJobs from "@/components/RoomJobs.vue";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import RoomMaterials from "@/components/RoomMaterials.vue";
+import {useRoomMaterialsStore} from "@/stores/roomMaterials.js";
 
 //const router = userRouter;
 const route = useRoute();
 const roomJobsStore = useRoomJobsStore();
+const roomMaterialsStore = useRoomMaterialsStore();
+const totalSum = computed(() => { return roomJobsStore.roomJobsSum + roomMaterialsStore.roomMaterialsSum })
 
 const rrub = '&#8381;';
 
