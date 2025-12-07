@@ -22,7 +22,13 @@
       </template>
     </div>
 
-    <q-card id="main_room_info__characteristics-total_cost" flat bordered class="q-pa-md q-mt-md flex flex-wrap justify-between">
+    <q-card
+      id="main_room_info__characteristics-total_cost"
+      flat
+      bordered
+      class="q-pa-md q-mt-md flex flex-wrap justify-between"
+      :style="stickyStyle"
+    >
       <q-card class="">
         <div class="text-subtitle1 text-weight-bold">Характеристики комнаты</div>
         <div class="text-subtitle1">Высота: <span class="text-weight-medium">{{ roomHeight }} м.</span></div>
@@ -327,7 +333,7 @@
 import {useRoute} from "vue-router"
 import {computed, onMounted, ref} from "vue";
 import {api} from "@/boot/axios.js";
-import {Notify} from "quasar";
+import {Notify, useQuasar} from "quasar";
 import StretchCeilingCalc from "@/components/JobTypesCalcs/StretchCeilingCalc.vue";
 import RoomJobs from "@/components/RoomJobs.vue";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
@@ -369,6 +375,14 @@ let startPoint = { x: 0, y: 0 }
 const currentProjectRooms = computed(() => {
   return `/projects/${projectId.value}/rooms`;
 });
+
+const $q = useQuasar();
+const stickyStyle = computed(() => ({
+  position: 'sticky',
+  top: $q.platform.is.desktop ? '51px' : '51px',
+  zIndex: 10,
+  backgroundColor: 'white'
+}));
 
 const wallText = computed({
   get() {

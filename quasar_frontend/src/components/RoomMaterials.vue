@@ -157,18 +157,18 @@ const filteredMaterials = computed(() => {
   );
 });
 
-const addMaterial = () => {
-  console.log(selectedMaterial.value);
+const addMaterial = async () => {
+  await roomMaterialsStore.addItem(roomId.value, selectedMaterial.value);
 }
 
 const pickMaterial = (material) => {
-  console.log(material);
+  //console.log(material);
   selectedMaterial.value.material_id = material.id;
   selectedMaterial.value.room_id = roomId.value;
   selectedMaterial.value.title = material.title;
   selectedMaterial.value.amount = 1;
-  selectedMaterial.value.sum = +material.price;
-  selectedMaterial.value.total = Math.ceil(selectedMaterial.value.sum * selectedMaterial.value.amount);
+  selectedMaterial.value.price = +material.price;
+  selectedMaterial.value.sum = Math.ceil(selectedMaterial.value.price * selectedMaterial.value.amount);
 }
 
 watch(

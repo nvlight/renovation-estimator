@@ -38,7 +38,7 @@ export const useRoomMaterialsStore = defineStore('roomMaterials', {
       try {
         const addItem = await api.post(`/v1/room/${roomId}/roomMaterial`, data);
         if (addItem) {
-          this.items.push(addItem.data);
+          this.items.push(addItem.data.data);
         }
         return addItem;
       } catch (error) {
