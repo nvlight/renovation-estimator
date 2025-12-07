@@ -38,7 +38,7 @@
 <!--      <div>value: {{ item.value }}</div>-->
 <!--      <div>amount: {{ item.amount }}</div>-->
 <!--    </div>-->
-    <div class="text-subtitle1 font-bold">Рекомендуемы материалы к покупке</div>
+    <div class="text-subtitle1 font-bold">Рекомендуемые материалы к покупке</div>
     <q-table
       title=""
       :rows="rows"

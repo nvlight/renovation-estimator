@@ -12,6 +12,7 @@
       <pre>{{ walls }}</pre>
     </div>
 
+    <!-- titles -->
     <div id="Project_titles">
       <h5 class="q-my-none ">Проект "{{ roomInfo?.project_name }}" ({{ projectId }})</h5>
       <h5 class="q-my-none ">Комната "{{ roomInfo?.name }}" ({{ roomId }}) </h5>
@@ -22,6 +23,7 @@
       </template>
     </div>
 
+    <!-- summary calcs -->
     <q-card
       id="main_room_info__characteristics-total_cost"
       flat
@@ -272,26 +274,24 @@
               align="justify"
               narrow-indicator
             >
+              <!-- Вкладки с типами работ - шапка -->
               <q-tab name="stretch_ceiling" label="Натяжной потолок" />
               <q-tab name="drywall" label="Гипсокартон" />
               <q-tab name="putty" label="Шпатлевка" />
             </q-tabs>
             <q-separator />
 
+            <!-- Вкладки с типами работа - внутренности -->
             <q-tab-panels v-model="job_types_tabs" animated>
-
               <q-tab-panel name="stretch_ceiling">
-                <stretch-ceiling-calc :walls="walls" :room-id="roomId"/>
+                <stretch-ceiling-calc :room-id="roomId" :walls="walls"/>
               </q-tab-panel>
-
               <q-tab-panel name="drywall">
-                <div class="text-h6">Гипсокартон</div>
+                <drywall-calc :room-id="roomId" :walls="walls" :height="Number(roomHeight)"/>
               </q-tab-panel>
-
               <q-tab-panel name="putty">
                 <div class="text-h6">Шпатлевка</div>
               </q-tab-panel>
-
             </q-tab-panels>
           </q-card>
         </q-expansion-item>
@@ -339,6 +339,7 @@ import RoomJobs from "@/components/RoomJobs.vue";
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import RoomMaterials from "@/components/RoomMaterials.vue";
 import {useRoomMaterialsStore} from "@/stores/roomMaterials.js";
+import DrywallCalc from "@/components/JobTypesCalcs/DrywallCalc.vue";
 
 //const router = userRouter;
 const route = useRoute();
@@ -349,7 +350,7 @@ const totalSum = computed(() => { return roomJobsStore.roomJobsSum + roomMateria
 const rrub = '&#8381;';
 
 const room_chars_tabs = ref('walls');
-const job_types_tabs = ref('stretch_ceiling');
+const job_types_tabs = ref('drywall');
 const etalonWalls = ref(null);
 
 const projectId = computed(() => Number(route.params.projectId));
