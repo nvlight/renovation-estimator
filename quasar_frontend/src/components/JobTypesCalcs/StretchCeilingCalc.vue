@@ -42,8 +42,8 @@
       </div>
 
       <div class="q-mt-sm">
-        <div class="text-subtitle1">Периметр: <span class="text-weight-medium">{{ perimeter }} м.</span></div>
-        <div class="text-subtitle1">Площадь: <span class="text-weight-medium">{{ ceilingSquare }} м.</span></div>
+        <div class="text-subtitle1">Периметр: <span class="text-weight-medium">{{ perimeter }} м.кв.</span></div>
+        <div class="text-subtitle1">Площадь: <span class="text-weight-medium">{{ ceilingSquare }} м.кв.</span></div>
 <!--        <div class="flex justify-between text-subtitle1">Натяжной потолок + установка: <span class="text-weight-medium">{{-->
 <!--            selectedCeilingSum-->
 <!--          }} ₽</span></div>-->
@@ -88,7 +88,7 @@
 
         <div class="flex justify-between q-mt-md text-subtitle1">
           <span class="text-weight-medium">Итоговая сумма:</span>
-          <span class="text-weight-bold">{{ totalSum }} ₽</span></div>
+          <span class="text-weight-bold">{{ totalSum.toLocaleString('ru-RU') }} ₽</span></div>
         <!--        <div class="text-2xl">{{ ceilingResult.sumInfo }}</div>-->
 
 <!--        <pre>{{ computedRowSumsInfo }}</pre>-->
@@ -101,7 +101,7 @@
   </div>
 
   <div>
-    <stretch-ceiling-building-materials/>
+    <stretch-ceiling-building-materials :perimeter="perimeter"/>
   </div>
 </template>
 

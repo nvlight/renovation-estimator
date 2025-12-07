@@ -5,6 +5,7 @@ import {api} from '@/boot/axios.js'; // алиас @ сработал после
 export const useMaterialsStore = defineStore('materials', {
   state: () => ({
     items: [],
+    loaded: false,
   }),
 
   // Геттеры
@@ -19,6 +20,7 @@ export const useMaterialsStore = defineStore('materials', {
       try {
         const response = await api.get(`/v1/material`);
         this.items = response.data.data;
+        this.loaded = true;
         return response.data;
       } catch (error) {
         console.log(error.response?.data || {message: 'load materials failed'})
