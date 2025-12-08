@@ -27,33 +27,52 @@
 
     <div class="q-mt-sm">
       <div class="text-subtitle1">Периметр: <span class="text-weight-medium">{{ perimeter }} м.кв.</span></div>
-      <div class="text-subtitle1">Площадь стен (проемы не учитываются): <span class="text-weight-medium">{{ wallsSquare }} м.кв.</span></div>
-      <div class="text-subtitle1">Площадь стен (проемы учитываются): <span class="text-weight-medium">{{ improvedWallsSquare }} м.кв.</span></div>
-      <div class="text-subtitle1">Площадь потолка: <span class="text-weight-medium">{{ ceilingSquare }} м.кв.</span></div>
-<!--      <div class="text-subtitle1">Площадь пола: <span class="text-weight-medium">{{ flooringSquare }} м.кв.</span></div>-->
-      <div class="text-subtitle1">Площадь (потолок + стены): <span class="text-weight-medium">{{ ceilWithWallsSquare }} м.кв.</span></div>
+      <div class="text-subtitle1">Площадь стен (проемы не учитываются): <span class="text-weight-medium">{{
+          wallsSquare
+        }} м.кв.</span></div>
+      <div class="text-subtitle1">Площадь стен (проемы учитываются): <span
+        class="text-weight-medium">{{ improvedWallsSquare }} м.кв.</span></div>
+      <div class="text-subtitle1">Площадь потолка: <span class="text-weight-medium">{{ ceilingSquare }} м.кв.</span>
+      </div>
+      <!--      <div class="text-subtitle1">Площадь пола: <span class="text-weight-medium">{{ flooringSquare }} м.кв.</span></div>-->
+      <div class="text-subtitle1">Площадь (потолок + стены): <span class="text-weight-medium">{{ ceilWithWallsSquare }} м.кв.</span>
+      </div>
 
-<!--      <pre>{{ props.walls }}</pre>-->
+      <!--      <pre>{{ props.walls }}</pre>-->
 
       <div class="q-mt-md text-subtitle1">
         <q-checkbox v-model="counting.ceil" label="Считать потолок" name="counting_ceil"/>
         <q-checkbox v-model="counting.walls" label="Считать стены" name="counting_walls"/>
-        <div class="text-weight-medium">Потолок, сумма: {{ ceilSquareSum.toLocaleString('ru-RU') }} ₽</div>
-        <div class="text-weight-medium">Стены, сумма: {{ wallsSquareSum.toLocaleString('ru-RU') }} ₽</div>
+        <div class="flex items-center text-weight-medium" style="gap: 21px;">
+          <div>Потолок, сумма: {{ ceilSquareSum.toLocaleString('ru-RU') }} ₽</div>
+          <div class="flex items-center" style="gap: 10px;">
+            <div>+</div>
+            <q-input style="width: 45px;" v-model="incDecSquareMetersForCeil.inc" label="кв.м." name="ceilAddSquareMetersValue"/>
+          </div>
+          <div class="flex items-center" style="gap: 10px;">
+            <div>-</div>
+            <q-input style="width: 45px;" v-model="incDecSquareMetersForCeil.dec" label="кв.м." name="ceilRemoveSquareMetersValue"/>
+          </div>
+        </div>
 
-        <div class="flex items-center" style="gap: 10px;">
-          <div>Прибавить кв.м.</div>
-          <q-input v-model="addSquareMetersValue" label="кв.м." name="addSquareMetersValue"/>
+        <div class="flex items-center text-weight-medium" style="gap: 21px;">
+          <div>Стены, сумма: {{ wallsSquareSum.toLocaleString('ru-RU') }} ₽</div>
+          <div class="flex items-center" style="gap: 10px;">
+            <div>+</div>
+            <q-input style="width: 45px;" v-model="incDecSquareMetersForWalls.inc" label="кв.м." name="wallsAddSquareMetersValue"/>
+          </div>
+          <div class="flex items-center" style="gap: 10px;">
+            <div>-</div>
+            <q-input style="width: 45px;" v-model="incDecSquareMetersForWalls.dec" label="кв.м." name="wallsRemoveSquareMetersValue"/>
+          </div>
         </div>
-        <div class="flex items-center" style="gap: 10px;">
-          <div>Отнять кв.м.</div>
-          <q-input v-model="removeSquareMetersValue" label="кв.м." name="removeSquareMetersValue" />
-        </div>
+
         <div class="text-weight-medium">Итоговая сумма: {{ totalDrywallSum.toLocaleString('ru-RU') }} ₽</div>
+
       </div>
 
       <div class="flex justify-end q-mt-md">
-        <q-btn @click="addJob" color="primary" label="Добавить работу"/>
+        <q-btn @click="addJobs" color="primary" label="Добавить работу" :disable="!isAddJobBtnActive"/>
       </div>
     </div>
   </div>
@@ -64,7 +83,7 @@
 </template>
 
 <script setup>
-import {ref, defineProps, onMounted, watch, computed} from 'vue'
+import {computed, defineProps, onMounted, ref, watch} from 'vue'
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
 
 const props = defineProps({
@@ -111,7 +130,16 @@ const ceilingSquare = computed(() => {
  * @type {ComputedRef<number>}
  */
 const ceilSquareSum = computed(() => {
-  const square = Math.round(ceilingSquare.value) * pricePerSquareMeter.value;
+  let square = Math.round(ceilingSquare.value) * pricePerSquareMeter.value;
+
+  const incSum = squareSumBy(incDecSquareMetersForCeil.value.inc);
+  const decSum = squareSumBy(incDecSquareMetersForCeil.value.dec);
+  square += (incSum - decSum);
+
+  if (square <= 0) {
+    square = 0;
+  }
+
   return +(Math.ceil(square).toFixed(2));
 });
 
@@ -120,7 +148,16 @@ const ceilSquareSum = computed(() => {
  * @type {ComputedRef<number>}
  */
 const wallsSquareSum = computed(() => {
-  const square = Math.round(improvedWallsSquare.value) * pricePerSquareMeter.value;
+  let square = Math.round(improvedWallsSquare.value) * pricePerSquareMeter.value;
+
+  const incSum = squareSumBy(incDecSquareMetersForWalls.value.inc);
+  const decSum = squareSumBy(incDecSquareMetersForWalls.value.dec);
+  square += (incSum - decSum);
+
+  if (square <= 0) {
+    square = 0;
+  }
+
   return +(Math.round(square).toFixed(2));
 });
 
@@ -128,7 +165,7 @@ const wallsSquareSum = computed(() => {
  * Площадь потолка + стен
  * @type {ComputedRef<unknown>}
  */
-const ceilWithWallsSquare = computed( () => {
+const ceilWithWallsSquare = computed(() => {
   return improvedWallsSquare.value + ceilingSquare.value;
 });
 
@@ -142,8 +179,14 @@ const squareSumBy = (oneSquareMeterPrice) => {
   return +(Math.round(square).toFixed(2));
 }
 
-const addSquareMetersValue = ref(0);
-const removeSquareMetersValue = ref(0);
+const incDecSquareMetersForCeil = ref({
+  inc: 0,
+  dec: 0,
+});
+const incDecSquareMetersForWalls = ref({
+  inc: 0,
+  dec: 0,
+});
 
 /**
  * Финальная сумма работы с учетом всех нюансов.
@@ -151,19 +194,11 @@ const removeSquareMetersValue = ref(0);
  */
 const totalDrywallSum = computed(() => {
   let sum = 0;
-  if (counting.value.ceil){
+  if (counting.value.ceil) {
     sum += ceilSquareSum.value;
   }
-  if (counting.value.walls){
+  if (counting.value.walls) {
     sum += wallsSquareSum.value;
-  }
-
-  const incSum = squareSumBy(addSquareMetersValue.value);
-  const decSum = squareSumBy(removeSquareMetersValue.value);
-  sum += (incSum - decSum);
-
-  if ( sum <= 0){
-    sum = 0;
   }
   return sum;
 })
@@ -212,7 +247,7 @@ const wallsSquare = computed(() => {
  * @param h
  * @returns {number}
  */
-const improvedWallsSquare = computed( ()=> {
+const improvedWallsSquare = computed(() => {
   let totalLength = 0;
 
   for (let seg of etalonWalls.value) {
@@ -221,15 +256,54 @@ const improvedWallsSquare = computed( ()=> {
     }
   }
 
-  const area = totalLength * roomHeight.value;
-  return area;
-  //return +area.toFixed(2);
+  return totalLength * roomHeight.value;
 });
 
-const addJob = () => {
-  roomJobsStore;
-  roomId;
-  //roomJobsStore.addRoomJob(roomId.value, computedStoreInfo.value);
+// {"sum": 9600, "name": "Потолок + установка", "price": 600, "amount": 16},
+const computedStoreInfoForCeil = computed(() => {
+  return {
+    room_id: roomId.value,
+    sum: ceilSquareSum.value,
+    title: 'Гипсокартон, потолок',
+    more_info: [{
+      "name": "Гипсокартон, потолок",
+      "price": pricePerSquareMeter.value,
+      "amount": Math.round(ceilingSquare.value),
+      "sum": ceilSquareSum.value,
+    }],
+  }
+});
+
+// {"sum": 9600, "name": "Потолок + установка", "price": 600, "amount": 16},
+const computedStoreInfoForWalls = computed(() => {
+  return {
+    room_id: roomId.value,
+    sum: wallsSquareSum.value,
+    title: 'Гипсокартон, стены',
+    more_info: [{
+      "name": "Гипсокартон, стены",
+      "price": pricePerSquareMeter.value,
+      "amount": Math.round(improvedWallsSquare.value),
+      "sum": wallsSquareSum.value,
+    }],
+  }
+});
+
+const isAddJobBtnActive = computed(() => {
+  return counting.value.ceil || counting.value.walls;
+});
+
+/**
+ * Добавление работ по гипсокартону (потолок, стены)
+ * @returns {Promise<void>}
+ */
+const addJobs = async () => {
+  if (counting.value.ceil) {
+    await roomJobsStore.addRoomJob(roomId.value, computedStoreInfoForCeil.value);
+  }
+  if (counting.value.walls) {
+   await roomJobsStore.addRoomJob(roomId.value, computedStoreInfoForWalls.value);
+  }
 };
 
 const resetWalls = () => {
