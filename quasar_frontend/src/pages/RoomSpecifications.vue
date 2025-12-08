@@ -154,7 +154,7 @@
                       <span>Конечная точка: ({{ stats.end_position[0] }}, {{ stats.end_position[1] }})</span>
 
                       <!--                  <div class="overflow-hidden q-ma-md "><pre class="q-ma-none">{{ etalonWalls }}</pre></div>-->
-                      <!--                  <div>{{ walls }}</div>-->
+<!--                                        <div>{{ walls }}</div>-->
                     </div>
                   </div>
 
@@ -340,11 +340,13 @@ import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import RoomMaterials from "@/components/RoomMaterials.vue";
 import {useRoomMaterialsStore} from "@/stores/roomMaterials.js";
 import DrywallCalc from "@/components/JobTypesCalcs/DrywallCalc.vue";
+import {useMaterialsStore} from "@/stores/materials.js";
 
 //const router = userRouter;
 const route = useRoute();
 const roomJobsStore = useRoomJobsStore();
 const roomMaterialsStore = useRoomMaterialsStore();
+const materialsStore = useMaterialsStore();
 const totalSum = computed(() => { return roomJobsStore.roomJobsSum + roomMaterialsStore.roomMaterialsSum })
 
 const rrub = '&#8381;';
@@ -611,7 +613,10 @@ onMounted(async  () => {
   await getRoomInfo(projectId.value, roomId.value);
   roomHeight.value = roomInfo.value.height;
 
+  await materialsStore.loadItems();
+
   etalonWalls.value = await getWallsInfo(roomId.value);
+  // etalonWalls занести в отдельный store? чтобы был getter на него
   walls.value = [...etalonWalls.value];
 });
 

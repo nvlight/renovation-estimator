@@ -1,7 +1,9 @@
 <template>
   <h6 class="q-mt-md q-mb-md">Подсчет рекомендуемых материалов к покупке</h6>
 
-  <div class="text-subtitle1 font-semibold"><span class="text-weight-medium">{{ perimeter }}</span> м.</div>
+  <div class="text-subtitle1 font-semibold">Периметр: <span class="text-weight-medium">{{ perimeter }}</span> м.</div>
+  <div class="text-subtitle1 font-semibold">Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }}</span> м.</div>
+  <div class="text-subtitle1 font-semibold">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }}</span> м.</div>
   <div class="text-subtitle1 font-semibold">Нужные id материалов: {{ needMaterialsIds }}</div>
 
   <div class="q-mt-md">
@@ -75,8 +77,19 @@ const props = defineProps({
   perimeter: {
     type: Number,
     required: true,
-  }
+  },
+  ceilSquare: {
+    type: Number,
+    required: false,
+  },
+  wallsSquare: {
+    type: Number,
+    required: false,
+  },
 });
+
+const ceilSquare = ref(props.ceilSquare);
+const wallsSquare = ref(props.wallsSquare);
 
 const columns = [
   {name: 'id', label: 'id', field: 'id', sortable: true, align: 'left'},
@@ -173,6 +186,20 @@ watch(
     perimeter.value = nv;
   },
   {immediate: true,}
+);
+watch(
+  () => props.ceilSquare,
+  (nv) => {
+    ceilSquare.value = nv;
+  },
+  {immediate: true}
+);
+watch(
+  () => props.wallsSquare,
+  (nv) => {
+    wallsSquare.value = nv;
+  },
+  {immediate: true}
 );
 
 onMounted(() => {

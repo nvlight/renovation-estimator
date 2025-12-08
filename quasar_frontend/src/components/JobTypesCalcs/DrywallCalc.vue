@@ -32,7 +32,7 @@
         }} м.кв.</span></div>
       <div class="text-subtitle1">Площадь стен (проемы учитываются): <span
         class="text-weight-medium">{{ improvedWallsSquare }} м.кв.</span></div>
-      <div class="text-subtitle1">Площадь потолка: <span class="text-weight-medium">{{ ceilingSquare }} м.кв.</span>
+      <div class="text-subtitle1">Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }} м.кв.</span>
       </div>
       <!--      <div class="text-subtitle1">Площадь пола: <span class="text-weight-medium">{{ flooringSquare }} м.кв.</span></div>-->
       <div class="text-subtitle1">Площадь (потолок + стены): <span class="text-weight-medium">{{ ceilWithWallsSquare }} м.кв.</span>
@@ -78,13 +78,19 @@
   </div>
 
   <div>
-    Рекомендуемые к покупке материалы!
+    <DrywallBuildingMaterials
+      :perimeter="perimeter"
+      :ceilSquare="ceilSquare"
+      :wallsSquare="improvedWallsSquare"
+      :walls="etalonWalls"
+    />
   </div>
 </template>
 
 <script setup>
 import {computed, defineProps, onMounted, ref, watch} from 'vue'
 import {useRoomJobsStore} from "@/stores/roomJobs.js";
+import DrywallBuildingMaterials from "@/components/BuildingMaterialCalcs/DrywallBuildingMaterials/DrywallBuildingMaterials.vue";
 
 const props = defineProps({
   roomId: {
@@ -121,7 +127,11 @@ const perimeter = computed(() => {
   return +((ch / 100).toFixed(2));
 });
 
-const ceilingSquare = computed(() => {
+/**
+ * Площадь потолка
+ * @type {ComputedRef<number>}
+ */
+const ceilSquare = computed(() => {
   return calculatePolygonSquare(etalonWalls.value);
 });
 
@@ -130,7 +140,7 @@ const ceilingSquare = computed(() => {
  * @type {ComputedRef<number>}
  */
 const ceilSquareSum = computed(() => {
-  let square = Math.round(ceilingSquare.value) * pricePerSquareMeter.value;
+  let square = Math.round(ceilSquare.value) * pricePerSquareMeter.value;
 
   const incSum = squareSumBy(incDecSquareMetersForCeil.value.inc);
   const decSum = squareSumBy(incDecSquareMetersForCeil.value.dec);
@@ -166,7 +176,7 @@ const wallsSquareSum = computed(() => {
  * @type {ComputedRef<unknown>}
  */
 const ceilWithWallsSquare = computed(() => {
-  return improvedWallsSquare.value + ceilingSquare.value;
+  return improvedWallsSquare.value + ceilSquare.value;
 });
 
 /**
@@ -242,7 +252,7 @@ const wallsSquare = computed(() => {
 })
 
 /**
- * Подсчитывает площь стен. Стены, которые являеются проемами не считаются (параметры is_real)
+ * Подсчитывает площь стен. Стены, которые являеются проемами не считаются (параметр is_real)
  * @param segments
  * @param h
  * @returns {number}
@@ -268,7 +278,7 @@ const computedStoreInfoForCeil = computed(() => {
     more_info: [{
       "name": "Гипсокартон, потолок",
       "price": pricePerSquareMeter.value,
-      "amount": Math.round(ceilingSquare.value),
+      "amount": Math.round(ceilSquare.value),
       "sum": ceilSquareSum.value,
     }],
   }

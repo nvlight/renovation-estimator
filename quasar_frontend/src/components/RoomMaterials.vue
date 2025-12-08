@@ -192,7 +192,7 @@ const deleteMaterial = async (roomId, row) => {
 
 onMounted(async () => {
   await roomMaterialsStore.loadItems(roomId.value);
-  await materialsStore.loadItems(roomId.value);
+  //await materialsStore.loadItems();
 });
 </script>
 
