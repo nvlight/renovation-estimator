@@ -7,45 +7,47 @@
   <div class="q-mt-md">
     <div class="text-subtitle1 font-semibold">
       Профиль потолочный направляющий:
-      <span class="text-weight-medium">{{ ceilRunnerProfileAmount }}</span> штук.
+      <span class="text-weight-medium">{{ ceilRunnerProfileCalc.amount }}</span> штук.
     </div>
     <div class="text-subtitle1 font-semibold">Id материалов: {{ ceilMaterials}}</div>
-    <div class="text-subtitle1 font-semibold">Максимальная длина стены: {{ maxCeilLength}}</div>
-    <div class="text-subtitle1 font-semibold">Максимальная ширина стены: {{maxCeilWidth}}</div>
+    <div class="text-subtitle1 font-semibold">Наибольшая длина стен: {{ maxCeilLength}}</div>
+    <div class="text-subtitle1 font-semibold">Наибольшая ширина стен: {{maxCeilWidth}}</div>
 <!--    <div>{{ walls }}</div>-->
     <div class="text-subtitle1 font-semibold">
       Профиль потолочный:
       <span class="text-weight-medium">{{ ceilProfileAmountCalc.amount }}</span> штук. ({{ ceilProfileAmountCalc.meters }} м.)
     </div>
 
+    <pre>{{ ceilMaterials }}</pre>
+
     <div class="q-mt-md">Шаги материалов</div>
     <div class="row" style="gap: 5px;">
       <div>
-        <q-input filled v-model="fastenerStepInputs.wood" label="деревянные саморезы"/>
+        <q-input filled v-model="materialsInputs.wood.value" label="деревянные саморезы" name="step_wood"/>
       </div>
       <div>
-        <q-input filled v-model="fastenerStepInputs.metal" label="Металлические саморезы"/>
+        <q-input filled v-model="materialsInputs.metal.value" label="Металлические саморезы" name="step_metal"/>
       </div>
       <div>
-        <q-input filled v-model="fastenerStepInputs.dowel4" label="Дюбель гвозди 4 см"/>
+        <q-input filled v-model="materialsInputs.dowel4.value" label="Дюбель гвозди 4 см" name="step_dowel4"/>
       </div>
       <div>
-        <q-input filled v-model="fastenerStepInputs.dowel6" label="Дюбель гвозди 6 см"/>
+        <q-input filled v-model="materialsInputs.dowel6.value" label="Дюбель гвозди 6 см" name="step_dowel6"/>
       </div>
       <div>
-        <q-input filled v-model="ceilingRunnerProfileLength" label="Длина направляющего профиля"/>
+        <q-input filled v-model="materialsInputs.ceilingRunnerProfileLength.value" label="Длина направляющего профиля" name="step_ceilingRunnerProfileLength"/>
       </div>
       <div>
-        <q-input filled v-model="ceilingRunnerProfileJointLength" label="Длина стыка направляющего профиля"/>
+        <q-input filled v-model="materialsInputs.ceilingRunnerProfileJointLength.value" label="Длина стыка направляющего профиля" name="step_ceilingRunnerProfileJointLength"/>
       </div>
       <div>
-        <q-input filled v-model="ceilingProfileLength" label="Длина профиля"/>
+        <q-input filled v-model="materialsInputs.ceilingProfileLength.value" label="Длина профиля" name="step_ceilingProfileLength"/>
       </div>
       <div>
-        <q-input filled v-model="ceilProfileMountedStep" label="Шаг профиля"/>
+        <q-input filled v-model="materialsInputs.ceilProfileMountedStep.value" label="Шаг профиля" name="step_ceilProfileMountedStep"/>
       </div>
       <div>
-        <q-input filled v-model="ceilProfileSuspensionsStep" label="Шаг подвеса"/>
+        <q-input filled v-model="materialsInputs.ceilProfileSuspensionsStep.value" label="Шаг подвеса" name="step_ceilProfileSuspensionsStep"/>
       </div>
 
     </div>
@@ -56,6 +58,7 @@
   <div v-if="materialsStore.loaded" class="q-mt-md">
     <div class="text-subtitle1 font-bold">Рекомендуемые материалы к покупке</div>
     <q-table
+      name="recomended_to_buy_materials"
       title=""
       :rows="rows"
       :columns="columns"
@@ -78,7 +81,7 @@
     </q-table>
   </div>
 
-  <!--  <pre>calcedFastenerAmount: {{ calcedFastenerAmount }}</pre>-->
+  <!--  <pre>materialStepValueRows: {{ materialStepValueRows }}</pre>-->
 </template>
 
 <script setup>
@@ -108,111 +111,162 @@ const ceilSquare = ref(props.ceilSquare);
 const columns = [
   {name: 'id', label: 'id', field: 'id', sortable: true, align: 'left'},
   {name: 'title', label: 'Материал', field: 'title', sortable: true, align: 'left'},  // Editable
-  {name: 'value', label: 'значение', field: 'value', sortable: false, align: 'right'},  // Computed
   {name: 'amount', label: 'количество', field: 'amount', sortable: false, align: 'right'},  // Computed
+  {name: 'price', label: 'цена', field: 'price', sortable: false, align: 'right'},  // Computed
+  {name: 'sum', label: 'сумма', field: 'sum', sortable: false, align: 'right'},  // Computed
 ];
 
-const rows = computed(() => {
-  return calcedFastenerAmount.value.map(item => {
-    return {
-      id: item.id,
-      title: item.title,
-      value: item.value,
-      amount: item.amount,
-    }
-  })
-});
-
-const fastenerStepInputs = ref({
-  'wood': 0.2,
-  'metal': 0.21,
-  'dowel4': 0.4,
-  'dowel6': 0.39,
-});
-
 const perimeter = ref(props.perimeter);
+const walls = ref(props.walls);
 
-// 3  - Профиль потолочный КМ Стандарт 47х17 мм 3 м 0,50 мм
-// 4  - Профиль потолочный направляющий КМ Стандарт 17х20 мм 3 м 0,50 мм
-// 11 - саморез, дерево, 4 см.
-//  6 - саморез, металл, 3.5 см.
-// 5  - Подвес прямой
-// 14 - семечка, саморез, 1 см.
-// 15 - дюбель гвоздь, 4 см.
-// 16 - дюбель гвоздь, 6 см.
-// 28 - скотч, клейкая лента.
-
-const needFastenerSteps = computed(() => [
-  {
-    id: 6,
-    type: 'fastener',
-    value: fastenerStepInputs.value.metal,
+const materialsInputs = ref({
+  wood: {
+    id: 11, // 11 - саморез, дерево, 4 см.
+    value: 0.2,
   },
-  {
-    id: 11,
-    type: 'fastener',
-    value: fastenerStepInputs.value.wood,
+  metal: {
+    id: 6, //  6 - саморез, металл, 3.5 см.
+    value: 0.21,
   },
-  {
-    id: 15,
-    type: 'fastener',
-    value: fastenerStepInputs.value.dowel4,
+  dowel4: {
+    id: 1, // 15 - дюбель гвоздь, 4 см.
+    value: 0.4,
   },
-  {
-    id: 16,
-    type: 'fastener',
-    value: fastenerStepInputs.value.dowel6,
+  dowel6: {
+    id: 1, // 16 - дюбель гвоздь, 4 см.
+    value: 0.39,
   },
-]);
-const calcedFastenerAmount = computed(() => {
-  return needFastenerSteps.value.map(item => {
-    return {
-      id: item.id,
-      title: materialsStore.loaded
-        ? materialsStore.items.find(i => i.id === item.id)?.title || '-'
-        : 'title',
-      value: +item.value,
-      amount: item.type === 'fastener' ? Math.ceil(perimeter.value / item.value) : +item.value,
-    }
-  })
+  ceilingRunnerProfileLength: {
+    id: 4, // 4  - Профиль потолочный направляющий КМ Стандарт 17х20 мм 3 м 0,50 мм
+    value: 3,
+  },
+  ceilingRunnerProfileJointLength: {
+    id: 1, // сколько нужно дополнительно, чтобы соединить 2 направляющих, установлено в 20 см.
+    value: 0.2,
+  },
+  ceilingProfileLength: {
+    id: 3, // 3  - Профиль потолочный КМ Стандарт 47х17 мм 3 м 0,50 мм
+    value: 3,
+  },
+  ceilProfileMountedStep: {
+    id: 1, // шаг установки профиля.
+    value: 0.4,
+  },
+  ceilProfileSuspensionsStep: {
+    id: 5, // 5  - Подвес прямой, шаг установки.
+    value: 0.5,
+  },
 });
+
+//const rows = ref([]);
+// const rows = computed(() => {
+//   return materialStepValueRows.value.map(item => {
+//     return {
+//       id: item.id,
+//       title: item.title,
+//       value: item.value,
+//       amount: item.amount,
+//     }
+//   })
+// });
+const rows = computed(() => {
+  return Object.entries(ceilMaterials.value).map(([id, value]) => {
+    const material = materialsStore.items.find(m => m.id === parseInt(id));
+
+    if (!material) return null
+
+    // Проверяем наличие слова "шт" в заголовке (без учета регистра)
+    const hasPieces = /шт/i.test(material.title);
+    let amount = 0;
+
+    if (hasPieces) {
+      // Ищем число перед словом "шт"
+      // Регулярное выражение ищет число (целое или дробное) перед "шт"
+      const match = material.title.match(/(\d+(?:[.,]\d+)?)\s*шт/i);
+
+      if (match && match[1]) {
+        // Заменяем запятую на точку для корректного преобразования
+        const quantityPerPack = parseFloat(match[1].replace(',', '.'));
+
+        if (quantityPerPack > 0) {
+          // Делим value на количество в упаковке и умножаем на цену
+          amount = (value / quantityPerPack) * material.price;
+        } else {
+          // Если не удалось извлечь количество, используем стандартный расчет
+          amount = value * material.price;
+        }
+      } else {
+        // Если паттерн не найден, используем стандартный расчет
+        amount = value * material.price;
+      }
+    } else {
+      // Если нет слова "шт", просто умножаем
+      amount = value * material.price;
+    }
+    amount = Math.ceil(amount);
+
+    return {
+      id: material.id,
+      title: material.title,
+      amount: value,
+      price: material.price,
+      sum: amount,
+    }
+  }).filter(Boolean)
+});
+
+// const materialStepValueRows = computed(() => {
+//   return materialSteps.value.map(item => {
+//     return {
+//       id: item.id,
+//       title: materialsStore.loaded
+//         ? materialsStore.items.find(i => i.id === item.id)?.title || '-'
+//         : 'title',
+//       value: +item.value,
+//       amount: Math.ceil(perimeter.value / item.value),
+//     }
+//   })
+// });
 
 /*
     #1 подсчет профиля потолочного направляющего.
     Сколько потребуется штук, также сколько потребуется для него дюбелей, саморезов и тд.
  */
-const ceilingRunnerProfileLength = ref(3);
-const ceilingRunnerProfileJointLength = ref(0.2);
 
 /**
  * Профиль потолочный направляющий - подсчет
- * @type {ComputedRef<number>}
+ * @type {ComputedRef<{amount: *, meters: *}>}
  */
-const ceilRunnerProfileAmount = computed( () => {
-  const amount = perimeter.value / ceilingRunnerProfileLength.value;
+const ceilRunnerProfileCalc = computed( () => {
+  const amount = perimeter.value / materialsInputs.value.ceilingRunnerProfileLength.value;
 
   // теперь нужно добавить стыки, каждый стык имеет длину, например 20 см.
-  const jointLength = (amount - 1) * ceilingRunnerProfileJointLength.value;
-  const jointAmount = jointLength / ceilingRunnerProfileLength.value;
+  const jointLength = (amount - 1) * materialsInputs.value.ceilingRunnerProfileJointLength.value;
+  const jointAmount = jointLength / materialsInputs.value.ceilingRunnerProfileLength.value;
 
-  return +(Math.ceil(amount + jointAmount).toFixed(2));
+  const amount2 = +(Math.ceil(amount + jointAmount).toFixed(2));
+  const meters = amount2 * materialsInputs.value.ceilingProfileLength.value;
+
+  return {amount: amount2, meters,};
 });
 
 // ^ количество и тип материалов к покупке
-// материалы для направляющего профиля
+// материалы для направляющего профиля (проход по периметру)
 const ceilMaterials1 = computed( () => {
   return {
-    15: Math.ceil((ceilRunnerProfileAmount.value * ceilingRunnerProfileLength.value) / fastenerStepInputs.value.dowel4),
-    11: Math.ceil((ceilRunnerProfileAmount.value * ceilingRunnerProfileLength.value) / fastenerStepInputs.value.wood),
+    15: Math.ceil((ceilRunnerProfileCalc.value.amount * materialsInputs.value.ceilingRunnerProfileLength.value) / materialsInputs.value.dowel4),
+    11: Math.ceil((ceilRunnerProfileCalc.value.amount * materialsInputs.value.ceilingRunnerProfileLength.value) / materialsInputs.value.wood.value),
+    4: ceilRunnerProfileCalc.value.amount,
   }
 });
-// материалы для профиля потолочного.
+// материалы для профиля потолочного. (прокидывание линий между направляющими)
 const ceilMaterials2 = computed( () => {
   return {
-    5: ceilProfileAmountCalc.value.suspencionsAmount,
-    15: ceilProfileAmountCalc.value.suspencionsAmount * 3, // по 3 дюбеля на 1 подвес
-    11: ceilProfileAmountCalc.value.suspencionsAmount * 4, // по 4 самореза на 1 подвес,
-    14: ceilProfileAmountCalc.value.seedScrews,
+    5: ceilSuspensionsAmount.value,
+    15: ceilSuspensionsAmount.value * 3, // по 3 дюбеля на 1 подвес
+    11: ceilSuspensionsAmount.value * 4, // по 4 самореза на 1 подвес,
+    14: ceilSeedScrewsAmount.value,
+    3: ceilProfileAmountCalc.value.amount,
   }
 });
 
@@ -247,10 +301,6 @@ const ceilMaterials = computed(() => {
     #2 подсчет профиля потолочного направляющего.
     Сколько потребуется штук, также сколько потребуется для него дюбелей, саморезов и тд.
  */
-const walls = ref(props.walls);
-const ceilingProfileLength = ref(3);
-const ceilProfileMountedStep = ref(0.4);
-const ceilProfileSuspensionsStep = ref(0.5);
 /**
  * Для стен (правильный многоугольник) находит максимальную длину и ширину, чтобы представить в виде прямоугольника,
  * чтобы посчитать с его помщью количесво прямых профилей.
@@ -310,45 +360,58 @@ const maxCeilLength = computed( () => {
 });
 
 /**
- * Подсчет количества профилей прямых (а также метража), нужных для их установки с выбранным шагом.
- * @type {ComputedRef<void>}
+ * Потолок - кол-во прямых подвесов
+ * @type {ComputedRef<number>}
+ */
+const ceilSuspensionsAmount = computed(() => {
+  let amount = Math.round(ceilProfileAmountCalc.value.maxWallsWidth / 100 / materialsInputs.value.ceilProfileSuspensionsStep.value);
+  if (amount < 1)  {
+    amount = 0;
+  }else{
+    //suspensionsAmount--; на каждую линию экономится 1 штука. Но лучше посчитаю больше, вдруг умники ровно принесут!
+    amount *= ceilProfileAmountCalc.value.lines;
+  }
+  return amount;
+});
+
+/**
+ * Потолок - кол-во саморезов (семечек)
+ * @type {ComputedRef<number>}
+ */
+const ceilSeedScrewsAmount = computed(() => {
+  // подсчитаю количество нужных семечек (id=14)
+  // 5 штук на 1 линию (линия предполагается по ширине) + 4 штуки на каждый подвес!
+  let amount = ceilProfileAmountCalc.value.lines * 5;
+  amount += ceilSuspensionsAmount.value * 4;
+
+  return amount;
+});
+
+/**
+ * Подсчитывает количество профилей направляющих
  */
 const ceilProfileAmountCalc = computed(() => {
   let min = maxCeilWidth.value;
   let max = maxCeilLength.value;
   if (maxCeilLength.value < min) {
-    min = maxCeilLength.value;
-    max = maxCeilWidth.value;
+    min = maxCeilLength.value; // наименьшая сторона
+    max = maxCeilWidth.value; // наибольшая сторона
   }
-  const lines = Math.ceil((max / 100) / ceilProfileMountedStep.value);
+  const lines = Math.ceil((max / 100) / materialsInputs.value.ceilProfileMountedStep.value);
   let meters = lines * min / 100;
   // если метры не кратны 3-м, т.е. нужно дополнить до ближайшей 3-ки
-  const ch = meters % ceilingProfileLength.value;
+  const ch = meters % materialsInputs.value.ceilingProfileLength.value;
   if (ch !== 0){
-    meters += ceilingProfileLength.value - ch;
+    meters += materialsInputs.value.ceilingProfileLength.value - ch;
   }
-
-  // todo: это нужно отсюда вынести
-  // крепежи тут же посчитаем (подвесы прямые)
-  let suspencionsAmount = Math.round(min / 100 / ceilProfileSuspensionsStep.value);
-  if (suspencionsAmount < 1)  {
-    suspencionsAmount = 0;
-  }else{
-    //suspencionsAmount--; на каждую линию экономится 1 штука. Но лучше посчитаю больше, вдруг умники ровно принесут!
-    suspencionsAmount *= lines;
-  }
-
-  // todo: это также нужно отсюда вынести
-  // подсчитаю количество нужных семечек (id=14)
-  // 5 штук на 1 линию (линия предполагается по ширине) + 4 штуки на каждый подвес!
-  let seedScrews = lines * 5;
-  seedScrews += suspencionsAmount * 4;
+  const amount = meters / materialsInputs.value.ceilingProfileLength.value;
 
   return  {
-    meters: meters,
-    amount: meters / ceilingProfileLength.value,
-    suspencionsAmount: suspencionsAmount,
-    seedScrews: seedScrews,
+    meters,
+    amount,
+    maxWallsLength: max,
+    maxWallsWidth: min,
+    lines,
   }
 });
 
