@@ -42,8 +42,8 @@ export const useRoomMaterialsStore = defineStore('roomMaterials', {
         }
         return addItem;
       } catch (error) {
-        console.log(error.response?.data || {message: 'store room material failed'})
-        return false;
+        //console.log(error.response?.data || {message: 'store room material failed'})
+        return error;
       }
     },
     async deleteItem(roomId, item_id) {

@@ -18,7 +18,7 @@
       <span class="text-weight-medium">{{ ceilProfileAmountCalc.amount }}</span> штук. ({{ ceilProfileAmountCalc.meters }} м.)
     </div>
 
-    <pre>{{ ceilMaterials }}</pre>
+<!--    <pre>{{ ceilMaterials }}</pre>-->
 
     <div class="q-mt-md">Шаги материалов</div>
     <div class="row" style="gap: 5px;">
@@ -73,12 +73,17 @@
             round
             size="sm"
             color="negative"
-            icon="delete"
-            @click="deleteMaterial()"
+            icon="add"
+            @click="addMaterial(props.row)"
           />
         </q-td>
       </template>
     </q-table>
+
+    <div class="q-mt-md text-subtitle1">Сумма всех материалов:  <strong>{{ allMaterialsSum }} </strong> ₽</div>
+    <div>
+      <q-btn color="primary" label="Добавить все материалы" @click="addAllMaterials"/>
+    </div>
   </div>
 
   <!--  <pre>materialStepValueRows: {{ materialStepValueRows }}</pre>-->
@@ -87,10 +92,17 @@
 <script setup>
 import {computed, onMounted, ref, watch} from "vue";
 import {useMaterialsStore} from "@/stores/materials.js";
+import {Notify} from "quasar";
+import {useRoomMaterialsStore} from "@/stores/roomMaterials.js";
 
+const roomMaterialsStore = useRoomMaterialsStore();
 const materialsStore = useMaterialsStore();
 
 const props = defineProps({
+  roomId: {
+    type: Number,
+    required: true,
+  },
   perimeter: {
     type: Number,
     required: true,
@@ -106,9 +118,11 @@ const props = defineProps({
   }
 });
 
+const roomId = ref(props.roomId);
 const ceilSquare = ref(props.ceilSquare);
 
 const columns = [
+  {name: 'actions', label: '#', field: 'actions', sortable: false, align: 'left'},
   {name: 'id', label: 'id', field: 'id', sortable: true, align: 'left'},
   {name: 'title', label: 'Материал', field: 'title', sortable: true, align: 'left'},  // Editable
   {name: 'amount', label: 'количество', field: 'amount', sortable: false, align: 'right'},  // Computed
@@ -158,75 +172,80 @@ const materialsInputs = ref({
   },
 });
 
-//const rows = ref([]);
-// const rows = computed(() => {
-//   return materialStepValueRows.value.map(item => {
-//     return {
-//       id: item.id,
-//       title: item.title,
-//       value: item.value,
-//       amount: item.amount,
-//     }
-//   })
-// });
+/**
+ * Получает сумму по конктретной позиции стр.материала, с учетом .шт, например 200 шт написано в стр. материале
+ * @param title
+ * @param price
+ * @param value
+ * @returns {number}
+ */
+const getMaterialTotalSum = (title, price, value) => {
+  // Проверяем наличие слова "шт" в заголовке (без учета регистра)
+  const hasPieces = /шт/i.test(title);
+  let amount = 0;
+
+  if (hasPieces) {
+    // Ищем число перед словом "шт"
+    // Регулярное выражение ищет число (целое или дробное) перед "шт"
+    const match = title.match(/(\d+(?:[.,]\d+)?)\s*шт/i);
+
+    if (match && match[1]) {
+      // Заменяем запятую на точку для корректного преобразования
+      const quantityPerPack = parseFloat(match[1].replace(',', '.'));
+
+      if (quantityPerPack > 0) {
+        // Делим value на количество в упаковке и умножаем на цену
+        // todo: если точно считать то так, если по упаковкам, нужно округлить вверх
+        // возможно потом для крепежей нужно пересмотреть этот код!
+        amount = (value / quantityPerPack) * price; // old variation
+        //amount = Math.ceil(value / quantityPerPack) * material.price; // new variation
+      } else {
+        // Если не удалось извлечь количество, используем стандартный расчет
+        amount = value * price;
+      }
+    } else {
+      // Если паттерн не найден, используем стандартный расчет
+      amount = value * price;
+    }
+  } else {
+    // Если нет слова "шт", просто умножаем
+    amount = value * price;
+  }
+  amount = Math.ceil(amount);
+
+  return amount;
+}
+
 const rows = computed(() => {
   return Object.entries(ceilMaterials.value).map(([id, value]) => {
     const material = materialsStore.items.find(m => m.id === parseInt(id));
 
     if (!material) return null
-
-    // Проверяем наличие слова "шт" в заголовке (без учета регистра)
-    const hasPieces = /шт/i.test(material.title);
-    let amount = 0;
-
-    if (hasPieces) {
-      // Ищем число перед словом "шт"
-      // Регулярное выражение ищет число (целое или дробное) перед "шт"
-      const match = material.title.match(/(\d+(?:[.,]\d+)?)\s*шт/i);
-
-      if (match && match[1]) {
-        // Заменяем запятую на точку для корректного преобразования
-        const quantityPerPack = parseFloat(match[1].replace(',', '.'));
-
-        if (quantityPerPack > 0) {
-          // Делим value на количество в упаковке и умножаем на цену
-          amount = (value / quantityPerPack) * material.price;
-        } else {
-          // Если не удалось извлечь количество, используем стандартный расчет
-          amount = value * material.price;
-        }
-      } else {
-        // Если паттерн не найден, используем стандартный расчет
-        amount = value * material.price;
-      }
-    } else {
-      // Если нет слова "шт", просто умножаем
-      amount = value * material.price;
-    }
-    amount = Math.ceil(amount);
+    let sum = getMaterialTotalSum(material.title, material.price, value);
 
     return {
       id: material.id,
       title: material.title,
       amount: value,
       price: material.price,
-      sum: amount,
+      sum,
     }
   }).filter(Boolean)
 });
 
-// const materialStepValueRows = computed(() => {
-//   return materialSteps.value.map(item => {
-//     return {
-//       id: item.id,
-//       title: materialsStore.loaded
-//         ? materialsStore.items.find(i => i.id === item.id)?.title || '-'
-//         : 'title',
-//       value: +item.value,
-//       amount: Math.ceil(perimeter.value / item.value),
-//     }
-//   })
-// });
+/**
+ * Получает сумму
+ * @type {ComputedRef<number>}
+ */
+const allMaterialsSum = computed(() => {
+  let sm = 0;
+
+  sm = rows.value.reduce((acc, cv) => {
+    return acc + cv.sum;
+  }, sm);
+
+  return sm;
+});
 
 /*
     #1 подсчет профиля потолочного направляющего.
@@ -351,7 +370,10 @@ const calculateRectangleDimensions = (vectors) => {
   };
 }
 
+
 const maxCeilDimensions = ref(calculateRectangleDimensions(walls.value));
+
+// Получение наибольшой длины и ширины стен.
 const maxCeilWidth = computed( () => {
   return maxCeilDimensions.value.maxWidth;
 });
@@ -415,7 +437,39 @@ const ceilProfileAmountCalc = computed(() => {
   }
 });
 
-const deleteMaterial = () => {
+const addMaterial = (row) => {
+  let data = {
+    room_id: roomId.value,
+    material_id: row.id,
+    amount: row.amount,
+    sum: row.sum,
+  };
+  const result = roomMaterialsStore.addItem(roomId.value, data);
+
+  result.then(response => {
+    if (response.status >= 200 && response.status < 300) {
+
+      Notify.create({
+        type: 'positive',
+        message: 'Строительный материал добавлен!',
+      });
+
+      return true;
+    } else {
+      // Имитируем ошибку
+      throw new Error(`HTTP ${response.status}`);
+    }
+  }).catch((error) => {
+    console.log(error);
+  })
+}
+
+const addAllMaterials = () => {
+
+  Notify.create({
+    type: 'positive',
+    message: 'Все строительные материалы добавлены!',
+  });
 }
 
 watch(

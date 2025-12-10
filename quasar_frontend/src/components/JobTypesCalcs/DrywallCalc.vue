@@ -79,6 +79,7 @@
 
   <div>
     <DrywallBuildingMaterials
+      :roomId="roomId"
       :perimeter="perimeter"
       :ceilSquare="ceilSquare"
       :wallsSquare="improvedWallsSquare"

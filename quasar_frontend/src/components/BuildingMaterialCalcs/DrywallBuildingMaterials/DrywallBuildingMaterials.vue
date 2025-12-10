@@ -6,7 +6,12 @@
   <div class="text-subtitle1 font-semibold">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }}</span> м.</div>
 
   <div>
-    <drywall-building-materials-for-ceil :perimeter="perimeter" :ceilSquare="ceilSquare" :walls="walls"/>
+    <drywall-building-materials-for-ceil
+      :roomId="props.roomId"
+      :perimeter="perimeter"
+      :ceilSquare="ceilSquare"
+      :walls="walls"
+    />
   </div>
 </template>
 
@@ -16,6 +21,10 @@ import DrywallBuildingMaterialsForCeil
   from "@/components/BuildingMaterialCalcs/DrywallBuildingMaterials/DrywallBuildingMaterialsForCeil.vue";
 
 const props = defineProps({
+  roomId: {
+    type: Number,
+    required: true,
+  },
   perimeter: {
     type: Number,
     required: true,
