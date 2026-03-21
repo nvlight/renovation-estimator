@@ -22,7 +22,7 @@ return new class extends Migration
             // $table->foreignId('room_id')->index()->constrained()->onDelete('cascade');
             // $table->foreignId('material_id')->index()->constrained()->onDelete('cascade');
 
-            // вариант 2 (классический)
+            // вариант 2 (классический) - тут без индексов, стоп - отмена
             // $table->unsignedBigInteger('room_id');
             // $table->unsignedBigInteger('material_id');
             // $table->foreign('room_id')->references('id')->on('rooms')->onDelete('CASCADE');
