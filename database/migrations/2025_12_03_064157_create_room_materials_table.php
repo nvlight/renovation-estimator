@@ -18,6 +18,10 @@ return new class extends Migration
             $table->foreignId('room_id')->constrained()->onDelete('cascade');
             $table->foreignId('material_id')->constrained()->onDelete('cascade');
 
+            // с добавлением индексов
+            // $table->foreignId('room_id')->index()->constrained()->onDelete('cascade');
+            // $table->foreignId('material_id')->index()->constrained()->onDelete('cascade');
+
             // вариант 2 (классический)
             // $table->unsignedBigInteger('room_id');
             // $table->unsignedBigInteger('material_id');
