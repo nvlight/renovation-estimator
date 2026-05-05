@@ -1,5 +1,5 @@
 <template>
-  <h6 class="q-mt-md q-mb-md">Подсчет рекомендуемых материалов к покупке</h6>
+  <h6 class="q-mt-md q-mb-md">Стены</h6>
 
   <div class="text-subtitle1 font-semibold">Периметр: <span class="text-weight-medium">{{ perimeter }}</span> м.</div>
   <div class="text-subtitle1 font-semibold">Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }}</span> м.</div>
@@ -31,16 +31,7 @@
 
   <!-- Список рекомендуемых, подсчитанных материалов. -->
   <div v-if="materialsStore.loaded" class="q-mt-md">
-<!--    <div v-for="(item, i) in calcedFastenerAmount" :key=i-->
-<!--         class="row"-->
-<!--         style="gap: 15px;"-->
-<!--    >-->
-<!--      <div>id: {{ item.id }}</div>-->
-<!--      <div>title: {{ item.title }}</div>-->
-<!--      <div>value: {{ item.value }}</div>-->
-<!--      <div>amount: {{ item.amount }}</div>-->
-<!--    </div>-->
-    <div class="text-subtitle1 font-bold">Рекомендуемые материалы к покупке</div>
+    <div class="text-subtitle1 font-bold">Таблица материалов к покупке (потолок)</div>
     <q-table
       title=""
       :rows="rows"

@@ -6,12 +6,21 @@
   <div class="text-subtitle1 font-semibold">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }}</span> м.</div>
 
   <div>
+
+    <div>isCountingCeil: {{ props.isCountingCeil }}</div>
+    <div>isCountingWalls: {{ props.isCountingWalls }}</div>
+
     <drywall-building-materials-for-ceil
+      v-if="props.isCountingCeil"
       :roomId="props.roomId"
       :perimeter="perimeter"
       :ceilSquare="ceilSquare"
       :walls="walls"
+      :isCountingCeil="props.isCountingCeil"
+      :isCountingWalls="props.isCountingWalls"
     />
+
+    <!-- тут добавить добавление строительных материалов для стен!! -->
   </div>
 </template>
 
@@ -41,7 +50,15 @@ const props = defineProps({
     type: Array,
     required: true,
     default: () => [],
-  }
+  },
+  isCountingCeil:{
+    type: Boolean,
+    required: true
+  },
+  isCountingWalls:{
+    type: Boolean,
+    required: true
+  },
 });
 
 const perimeter = ref(props.perimeter)

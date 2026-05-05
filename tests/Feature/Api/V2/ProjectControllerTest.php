@@ -17,7 +17,16 @@ it('returns a paginated list of projects for v2 with transformed fields', functi
         ->assertJsonStructure([
             'data' => [
                 [
-                    'id', 'user_id', 'name', 'description', 'created', 'location' => ['name', 'lat', 'lng'],
+                    'id',
+                    'user_id',
+                    'name',
+                    'description',
+                    'created',
+                    'location' => [
+                        'name',
+                        'lat',
+                        'lng'
+                    ],
                 ]
             ],
             'links',

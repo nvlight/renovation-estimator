@@ -46,6 +46,20 @@ export const useRoomMaterialsStore = defineStore('roomMaterials', {
         return error;
       }
     },
+    async addItems(roomId, data) {
+      try {
+        const addItem = await api.post(`/v1/room/${roomId}/roomMaterials`, data);
+        if (addItem) {
+          if (Array.isArray(addItem.data.data)) {
+            this.items.push(...addItem.data.data);
+          }
+        }
+        return addItem;
+      } catch (error) {
+        //console.log(error.response?.data || {message: 'store room material failed'})
+        return error;
+      }
+    },
     async deleteItem(roomId, item_id) {
       try {
         const deleted = await api.delete(`/v1/room/${roomId}/roomMaterial/${item_id}`);

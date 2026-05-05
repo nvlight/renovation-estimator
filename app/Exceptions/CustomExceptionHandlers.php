@@ -23,5 +23,7 @@ return function (Exceptions $exceptions) {
 
             return response()->json(['message' => 'Ресурс не найден'], 404);
         }
+
+        return [];
     });
 };

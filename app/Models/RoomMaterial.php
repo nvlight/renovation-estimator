@@ -11,6 +11,8 @@ class RoomMaterial extends Model
     /** @use HasFactory<\Database\Factories\RoomMaterialFactory> */
     use HasFactory;
 
+    const PER_PAGE = 100;
+
     protected $fillable = [
         'room_id',
         'material_id',

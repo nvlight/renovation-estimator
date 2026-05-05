@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('v1/room/{room}')->group(function () {
         Route::apiResource('roomJob', RoomJobController::class);
         Route::apiResource('roomMaterial', RoomMaterialController::class);
+        Route::post('roomMaterials', [RoomMaterialController::class, 'bulkStore'])->name('roomMaterials.bulk');
     });
 
     Route::apiResource('v1/material', MaterialController::class);

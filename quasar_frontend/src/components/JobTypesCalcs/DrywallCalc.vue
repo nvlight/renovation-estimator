@@ -84,6 +84,8 @@
       :ceilSquare="ceilSquare"
       :wallsSquare="improvedWallsSquare"
       :walls="etalonWalls"
+      :isCountingCeil="counting.ceil"
+      :isCountingWalls="counting.walls"
     />
   </div>
 </template>

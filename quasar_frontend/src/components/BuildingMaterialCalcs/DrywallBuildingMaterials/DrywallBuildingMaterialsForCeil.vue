@@ -1,5 +1,5 @@
 <template>
-  <h6 class="q-mt-md q-mb-md">Потолок</h6>
+  <h6 class="q-mt-md q-mb-md">"Потолок"</h6>
 
   <div class="text-subtitle1 font-semibold">Периметр: <span class="text-weight-medium">{{ perimeter }}</span> м.</div>
   <div class="text-subtitle1 font-semibold">Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }}</span> м.</div>
@@ -56,7 +56,7 @@
 
   <!-- Список рекомендуемых, подсчитанных материалов. -->
   <div v-if="materialsStore.loaded" class="q-mt-md">
-    <div class="text-subtitle1 font-bold">Рекомендуемые материалы к покупке</div>
+    <div class="text-subtitle1 font-bold">Таблица материалов к покупке (потолок)</div>
     <q-table
       name="recomended_to_buy_materials"
       title=""
@@ -82,7 +82,7 @@
 
     <div class="q-mt-md text-subtitle1">Сумма всех материалов:  <strong>{{ allMaterialsSum }} </strong> ₽</div>
     <div>
-      <q-btn color="primary" label="Добавить все материалы" @click="addAllMaterials"/>
+      <q-btn color="primary" label="Добавить все материалы (потолок)" @click="addAllMaterials"/>
     </div>
   </div>
 
@@ -115,7 +115,15 @@ const props = defineProps({
     type: Array,
     required: true,
     default: () => [],
-  }
+  },
+  isCountingCeil:{
+    type: Boolean,
+    required: true
+  },
+  isCountingWalls:{
+    type: Boolean,
+    required: true
+  },
 });
 
 const roomId = ref(props.roomId);
@@ -464,12 +472,39 @@ const addMaterial = (row) => {
   })
 }
 
+/**
+ * Получить все строительные материалы из списка и добавить их всех разом
+ */
 const addAllMaterials = () => {
 
-  Notify.create({
-    type: 'positive',
-    message: 'Все строительные материалы добавлены!',
+  const materialsData = computed(() => {
+    return rows.value.map(row => ({
+      room_id:     roomId.value,
+      material_id: row.id,
+      amount:      row.amount,
+      sum:         row.sum
+    }))
   });
+  console.log(materialsData.value);
+
+  const result = roomMaterialsStore.addItems(roomId.value, {"materials": materialsData.value});
+
+  result.then(response => {
+    if (response.status >= 200 && response.status < 300) {
+
+      Notify.create({
+        type: 'positive',
+        message: 'Все строительные материалы добавлены!',
+      });
+
+      return true;
+    } else {
+      // Имитируем ошибку
+      throw new Error(`HTTP ${response.status}`);
+    }
+  }).catch((error) => {
+    console.log(error);
+  })
 }
 
 watch(

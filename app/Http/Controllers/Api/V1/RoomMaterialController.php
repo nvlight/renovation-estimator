@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomMaterialRequest;
+use App\Http\Requests\StoreRoomMaterialsRequest;
 use App\Http\Requests\UpdateRoomMaterialRequest;
 use App\Http\Resources\V1\RoomMaterialResource;
 use App\Models\Room;
@@ -32,7 +33,7 @@ class RoomMaterialController extends Controller
 
         $roomMaterials = RoomMaterial::query()
             ->where('room_id', $room->id)
-            ->paginate();
+            ->paginate(RoomMaterial::PER_PAGE);
 
         return RoomMaterialResource::collection($roomMaterials)->response();
     }
@@ -47,6 +48,47 @@ class RoomMaterialController extends Controller
 
         //return response()->json(new RoomMaterialResource::($roomMaterial), 201);
         return RoomMaterialResource::make($roomMaterial)->response()->setStatusCode(201);
+    }
+
+    /**
+     * Сохранение пачки строительных материалов
+     * @param StoreRoomMaterialsRequest $request
+     * @param Room $room
+     * @return JsonResponse
+     */
+    public function bulkStore(StoreRoomMaterialsRequest $request, Room $room): JsonResponse
+    {
+        $data = $request->validated();
+
+        // Добавляем room_id ко всем материалам
+//        $materialsToCreate = collect($data['materials'])->map(function ($item) use ($room) {
+//            return [
+//                'room_id'      => $room->id,
+//                'material_id'  => $item['material_id'],
+//                'amount'       => $item['amount'],
+//                'sum'          => $item['sum'],
+//                // 'price'     => $item['price'] ?? null,   // если нужно
+//                'created_at'   => now(),
+//                'updated_at'   => now(),
+//            ];
+//        })->toArray();
+        //RoomMaterial::query()->insert($materialsToCreate);
+//        return response()->json(['success' => 1])->setStatusCode(201);
+
+        // Если нужно вернуть созданные модели с отношениями — лучше использовать createMany + fresh
+        $roomMaterials = $room->room_materials()->createMany(
+            collect($data['materials'])->map(fn($item) => [
+                'material_id' => $item['material_id'],
+                'amount'      => $item['amount'],
+                'sum'         => $item['sum'],
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ])->toArray()
+        );
+
+        return RoomMaterialResource::collection($roomMaterials)
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
