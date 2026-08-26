@@ -170,6 +170,4 @@ docker-compose.yml    Sail + Postgres + Redis + Quasar
 docs/                 подробная документация
 ```
 
-## Лицензия
-
-Исходный каркас Laravel — MIT. См. `composer.json`.
+© 2026 nvlight. All rights reserved.
