@@ -50,11 +50,25 @@ describe('ProjectsPage', () => {
   it('displays loading spinner when projects are not loaded and no error', async () => {
     const projectsStore = useProjectsStore(pinia);
     projectsStore.projects = [];
+    wrapper.vm.itemsLoading = true;
+    wrapper.vm.loadErrorMessage = null;
+    await wrapper.vm.$nextTick();
     expect(wrapper.find('.q-spinner').exists()).toBe(true);
     expect(wrapper.text()).toContain('loading ...');
   });
 
+  it('displays empty state when fetch returned no projects', async () => {
+    const projectsStore = useProjectsStore(pinia);
+    projectsStore.projects = [];
+    wrapper.vm.itemsLoading = false;
+    wrapper.vm.loadErrorMessage = null;
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain('Пока нет проектов');
+    expect(wrapper.find('.q-spinner').exists()).toBe(false);
+  });
+
   it('displays error message when loadErrorMessage is set', async () => {
+    wrapper.vm.itemsLoading = false;
     wrapper.vm.loadErrorMessage = 'Failed to load projects';
     await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain('Ошибка, попробуйте повторить позднее');
@@ -63,6 +77,7 @@ describe('ProjectsPage', () => {
 
   it('renders project list when projects are loaded', async () => {
     const projectsStore = useProjectsStore(pinia);
+    wrapper.vm.itemsLoading = false;
     projectsStore.projects = [
       { id: 1, name: 'Project 1', description: 'Desc 1', created: '2025-06-01T12:00:00Z' },
       { id: 2, name: 'Project 2', description: '', created: '2025-06-02T12:00:00Z' },
@@ -135,6 +150,7 @@ describe('ProjectsPage', () => {
 
   it('opens edit project dialog when edit button is clicked', async () => {
     const projectsStore = useProjectsStore(pinia);
+    wrapper.vm.itemsLoading = false;
     projectsStore.projects = [
       { id: 1, name: 'Project 1', description: 'Desc 1', created: '2025-06-01T12:00:00Z' },
     ];
@@ -192,6 +208,7 @@ describe('ProjectsPage', () => {
 
   it('opens delete confirmation dialog when delete button is clicked', async () => {
     const projectsStore = useProjectsStore(pinia);
+    wrapper.vm.itemsLoading = false;
     projectsStore.projects = [
       { id: 1, name: 'Project 1', description: 'Desc 1', created: '2025-06-01T12:00:00Z' },
     ];

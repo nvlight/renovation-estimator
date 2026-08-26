@@ -11,8 +11,21 @@
       />
     </div>
 
-    <!-- Показ проектов, если они есть  -->
-    <div v-if="!loadErrorMessage && projectsStore.projects.length">
+    <div v-if="itemsLoading" class="text-center q-mt-md">
+      <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
+        <q-spinner
+          size="1em"
+          class="q-mr-xs"
+        />
+        <div>loading ...</div>
+      </div>
+    </div>
+    <div v-else-if="loadErrorMessage" class="text-center q-mt-md">
+      <div class="text-negative q-mb-md">
+        Ошибка, попробуйте повторить позднее
+      </div>
+    </div>
+    <div v-else-if="projectsStore.projects.length">
       <q-list bordered separator class="rounded-borders shadow-2">
         <q-item
           v-for="project in projectsStore.projects"
@@ -55,21 +68,7 @@
       </div>
     </div>
     <div v-else class="text-center q-mt-md">
-      <!-- Если ошибок нет, показываю что проекты загружаются -->
-      <div v-if="!loadErrorMessage" >
-        <div class="row items-center justify-center no-wrap" style="min-width: max-content;">
-          <q-spinner
-            size="1em"
-            class="q-mr-xs"
-          />
-          <div>loading ...</div>
-        </div>
-
-      </div>
-      <!-- Иначе показываю шаблонную ошибку -->
-      <div v-else class="text-negative q-mb-md">
-        Ошибка, попробуйте повторить позднее
-      </div>
+      <div>Пока нет проектов</div>
     </div>
 
     <!-- Модальное окно для добавления проекта -->
@@ -290,6 +289,7 @@ import { useRouter } from 'vue-router'
 const authStore = useAuthStore();
 const projectsStore = useProjectsStore();
 const loadErrorMessage = ref(null);
+const itemsLoading = ref(false);
 const router = useRouter();
 
 const goToProjectRooms = (projectId) => {
@@ -345,9 +345,13 @@ const formatDate = (timestamp) => {
 async function loadProjects(page) {
   currentPage.value = page;
   try {
+    itemsLoading.value = true;
+    loadErrorMessage.value = null;
     await projectsStore.loadProjects(page);
   } catch (error) {
     loadErrorMessage.value = error.message || 'Failed to load projects';
+  } finally {
+    itemsLoading.value = false;
   }
 }
 
