@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Project;
+use App\Models\User;
+use Database\Seeders\Support\DemoDataset;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 class ProjectSeeder extends Seeder
 {
@@ -13,6 +15,23 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
-        Project::factory()->count(10)->create();
+        $users = User::query()->pluck('id', 'email');
+
+        foreach (DemoDataset::projects() as $project) {
+            $userId = $users[$project['owner_email']] ?? null;
+            if ($userId === null) {
+                throw new \RuntimeException("User [{$project['owner_email']}] is missing before ProjectSeeder");
+            }
+
+            Project::query()->create([
+                'user_id' => $userId,
+                'name' => $project['name'],
+                'description' => $project['description'],
+                'created' => Carbon::now()->subDays((int) $project['days_ago']),
+                'place_name' => $project['place_name'],
+                'latitude' => $project['latitude'],
+                'longitude' => $project['longitude'],
+            ]);
+        }
     }
 }

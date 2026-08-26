@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomWall;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use Database\Seeders\Support\DemoDataset;
+use Database\Seeders\Support\WallShapes;
 use Illuminate\Database\Seeder;
 
 class RoomWallSeeder extends Seeder
@@ -14,58 +17,42 @@ class RoomWallSeeder extends Seeder
      */
     public function run(): void
     {
-        // sail artisan db:seed --class=RoomWallSeeder
-        $rooms = Room::all();
-        $allWalls = [];
+        $users = User::query()->pluck('id', 'email');
+        $now = now();
+        $rows = [];
 
-        foreach ($rooms as $room) {
-            // Генерируем ширину и высоту для прямоугольника (чтобы четырехугольник сходился)
-            $width = fake()->randomFloat(2, 200, 700); // Ширина от 2 до 8 метров
-            $height = fake()->randomFloat(2, 100, 700); // Высота от 2 до 8 метров
+        foreach (DemoDataset::projects() as $projectDef) {
+            $userId = $users[$projectDef['owner_email']];
+            $project = Project::query()
+                ->where('user_id', $userId)
+                ->where('name', $projectDef['name'])
+                ->firstOrFail();
 
-            // Подготавливаем массив для bulk insert
-            $allWalls[] = [
-                'room_id' => $room->id,
-                'length' => $width,
-                'angle' => 90,
-                'is_real' => true,
-                'order' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            foreach ($projectDef['rooms'] as $roomDef) {
+                $room = Room::query()
+                    ->where('project_id', $project->id)
+                    ->where('name', $roomDef['name'])
+                    ->firstOrFail();
 
-            $allWalls[] = [
-                'room_id' => $room->id,
-                'length' => $height,
-                'angle' => 0,
-                'is_real' => true,
-                'order' => 2,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-
-            $allWalls[] = [
-                'room_id' => $room->id,
-                'length' => $width,
-                'angle' => -90,
-                'is_real' => true,
-                'order' => 3,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-
-            $allWalls[] = [
-                'room_id' => $room->id,
-                'length' => $height,
-                'angle' => 180,
-                'is_real' => true,
-                'order' => 4,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+                $walls = WallShapes::fromSpec($roomDef['shape'], $roomDef['shape_args']);
+                foreach ($walls as $wall) {
+                    $rows[] = [
+                        'room_id' => $room->id,
+                        'length' => $wall['length'],
+                        'angle' => $wall['angle'],
+                        'is_real' => $wall['is_real'] ? 1 : 0,
+                        'order' => $wall['order'],
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
         }
 
-        // Bulk insert всех стен одним запросом
-        RoomWall::query()->insert($allWalls);
+        if ($rows !== []) {
+            foreach (array_chunk($rows, 500) as $chunk) {
+                RoomWall::query()->insert($chunk);
+            }
+        }
     }
 }

@@ -40,24 +40,27 @@ API: http://localhost:{APP_PORT}
 
 ## Сидеры
 
-`DatabaseSeeder` вызывает только:
-
-1. `UserSeeder` — 10 пользователей (`UserFactory`, пароль `password`, locale `ru_RU`);
-2. `ProjectSeeder` — 10 проектов, `user_id` случайный из существующих.
-
-Остальные — вручную:
+Одна команда заполняет все бизнес-таблицы:
 
 ```bash
-sail artisan db:seed --class=RoomSeeder
-sail artisan db:seed --class=RoomWallSeeder
-sail artisan db:seed --class=RoomJobsSeeder
-sail artisan db:seed --class=MaterialSeeder
-sail artisan db:seed --class=RoomMaterialSeeder
+sail artisan db:seed
+# или с нуля:
+sail artisan migrate:fresh --seed
 ```
 
-`MaterialSeeder` — 15 случайных товаров. Калькулятор ГКЛ ожидает конкретные **id** (профиль 3, направляющий 4, подвес 5, саморезы 6/11 и т.д.). После чистого seed нормы могут не совпасть с реальными товарами — для демо лучше завести материалы с нужными id или поправить константы в `DrywallBuildingMaterialsForCeil.vue`.
+`DatabaseSeeder` в начале делает `TRUNCATE … RESTART IDENTITY CASCADE` по users / projects / rooms / walls / jobs / materials / room_materials / картинкам и связанным токенам, удаляет файлы `storage/app/public/materials/seed-*`, затем вызывает:
 
-`RoomJobsSeeder` пишет `more_info` как текст Faker, тогда как API/UI ждут массив объектов — для ручного просмотра сметы лучше добавлять работы через калькулятор.
+1. `UserSeeder` — 6 пользователей, пароль у всех **`password`**. Демо: `demo@example.com`. Пустой список проектов: `empty@example.com`.
+2. `ProjectSeeder` — 22 проекта, привязка по email (у демо 12 — вторая страница пагинации).
+3. `RoomSeeder` — ~47 комнат с русскими именами.
+4. `RoomWallSeeder` — замкнутые контуры: прямоугольник, проём (`is_real = 0`), Г-образная, коридор, пятиугольник; часть комнат без стен.
+5. `MaterialSeeder` — 36 товаров из `Support/MaterialCatalog.php` (id 1…36). Калькулятор ГКЛ: **3** потолочный профиль, **4** направляющий, **5** подвес, **6** саморез металл, **11** саморез дерево, **14** семечка, **15/16** дюбель, **28** малярная лента. У 10 товаров — плейсхолдеры из `database/seeders/fixtures/materials/` (у id 1 и 3 по три кадра).
+6. `RoomJobsSeeder` — `more_info` как массив `{name, amount, price, sum}` (натяжной / ГКЛ).
+7. `RoomMaterialSeeder` — живые FK, `sum` с учётом фасовки `N шт` в title.
+
+Повторный `db:seed` даёт тот же набор. Фабрики для Pest не трогаем.
+
+Отдельный класс (`--class=RoomSeeder` и т.д.) по-прежнему можно вызвать вручную, но без truncate он ожидает уже существующие родители.
 
 ## Artisan-команды
 

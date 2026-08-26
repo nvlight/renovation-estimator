@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Project;
 use App\Models\Room;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use Database\Seeders\Support\DemoDataset;
 use Illuminate\Database\Seeder;
 
 class RoomSeeder extends Seeder
@@ -13,6 +15,23 @@ class RoomSeeder extends Seeder
      */
     public function run(): void
     {
-        Room::factory()->count(10)->create();
+        $users = User::query()->pluck('id', 'email');
+
+        foreach (DemoDataset::projects() as $projectDef) {
+            $userId = $users[$projectDef['owner_email']];
+            $project = Project::query()
+                ->where('user_id', $userId)
+                ->where('name', $projectDef['name'])
+                ->firstOrFail();
+
+            foreach ($projectDef['rooms'] as $room) {
+                Room::query()->create([
+                    'project_id' => $project->id,
+                    'name' => $room['name'],
+                    'description' => $room['description'],
+                    'height' => $room['height'],
+                ]);
+            }
+        }
     }
 }
