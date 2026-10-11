@@ -15,7 +15,7 @@
         "postinstall": "quasar prepare",
         "test:unit:ui": "vitest --ui --no-open --api.host 0.0.0.0 --logHeapUsage=true",
         "test:unit": "vitest",
-        "test:unit:ci": "vitest run",
+        "test:unit:ci": "vitest run --no-open",
         "bench": "vitest bench",
         "coverage": "npx vitest --coverage.enabled --coverage.all --no-open --coverage.include=./src/pages "
     },

@@ -12,9 +12,9 @@ import {vi, describe, beforeEach, afterEach, it, expect} from 'vitest';
 installQuasarPlugin();
 
 vi.mock('vue-router', () => ({
-  // useRouter: vi.fn(() => ({
-  //   push: vi.fn(),
-  // })),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+  })),
   useRoute: vi.fn(() => ({
     params: {projectId: '123'}, // Мокаем объект маршрута, можно добавить нужные свойства
     query: {},
@@ -255,7 +255,7 @@ describe('ProjectRoomsPage', () => {
     expect(wrapper.vm.deleteItemName).toBe('Room 1');
   });
 
-  it.only('calls deleteItem when confirming deletion', async () => {
+  it('calls deleteItem when confirming deletion', async () => {
     //const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const roomsStore = useRoomsStore(pinia);
     roomsStore.deleteRoom.mockResolvedValue(true);
