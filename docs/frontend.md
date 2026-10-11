@@ -1,6 +1,6 @@
 # Фронтенд
 
-Каталог: `quasar_frontend/`. Quasar CLI + Vite 2, Vue 3 `<script setup>`, Pinia, Vue Router history mode.
+Каталог: `quasar_frontend/`. Quasar CLI (`@quasar/app-vite` 2) + Vite 6, Vue 3 `<script setup>`, Pinia, Vue Router history mode.
 
 Точка входа API: `src/config.js` → Axios instance в `src/boot/axios.js` (`app.config.globalProperties.$api` и named export `api`).
 
@@ -31,7 +31,7 @@ Guard:
 
 На каждом переходе вызывается `authStore.initializeAuth()` (проставляет Axios header из localStorage).
 
-Боковое меню `MainLayout` пока содержит дефолтные ссылки Quasar, не пункты приложения. Навигация — со страниц (хлебные крошки, кнопки).
+Боковое меню `MainLayout` пока содержит дефолтные ссылки Quasar, не пункты приложения. Dashboard также не содержит ссылок на рабочие разделы, поэтому `/projects` и `/materials` открывают напрямую; переходы из проектов в комнаты и спецификацию сделаны кнопками и breadcrumbs.
 
 ## Pinia stores
 
@@ -41,6 +41,8 @@ Guard:
 
 State: `user`, `token` из localStorage.  
 Getter: `isAuthenticated` = наличие токена.
+
+Login сохраняет и токен, и пользователя. Register сохраняет токен и обновляет state, но сейчас не записывает пользователя в localStorage, поэтому после reload зарегистрированный пользователь теряется из `currentUser` при сохранённой авторизации.
 
 | action | HTTP |
 |---|---|
@@ -95,8 +97,8 @@ URL: `/projects/:projectId/rooms/:roomId/specifications`.
 При монтировании:
 
 1. `GET /v1/project/{pid}/rooms/{rid}` — имя проекта, комнаты, высота;
-2. `GET /v1/roomWalls/{rid}` — стены;
-3. `materialsStore.loadItems()`;
+2. `materialsStore.loadItems()`;
+3. `GET /v1/roomWalls/{rid}` — стены;
 4. `roomJobs` и `roomMaterials` подгружаются дочерними компонентами.
 
 Липкая шапка:
@@ -154,8 +156,8 @@ components/
 
 ## Состояние и согласованность
 
-- Токен и user — localStorage, переживают reload.
-- Списки проектов/комнат живут в Pinia до ухода со страницы; спецификация комнаты грузит данные заново в `onMounted`.
+- После login токен и user лежат в localStorage и переживают reload; у register есть описанное выше исключение.
+- Списки проектов/комнат остаются в Pinia в течение текущей SPA-сессии; спецификация комнаты грузит данные заново в `onMounted`.
 - Итог сметы реактивный: геттеры сторов работ и материалов.
 - После bulk-add материалы дописываются в `roomMaterials.items`.
 
@@ -168,5 +170,7 @@ Vitest + Vue Test Utils + `@pinia/testing`. Каталог `quasar_frontend/test
 - `rooms/ProjectRoomsPage`
 
 Спецификация комнаты и калькуляторы автотестами не покрыты.
+
+Текущий прогон `npm run test:unit:ci` выполняет 37 тестов в 6 файлах; benchmark `sort.bench.ts` в этот прогон не входит.
 
 Команды — в корневом [README](../README.md#тесты) и [development.md](development.md).

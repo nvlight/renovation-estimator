@@ -1,9 +1,8 @@
 # HTTP API
 
-Базовый URL: `{APP_URL}:{APP_PORT}/api`  
-Пример локально: `http://localhost:8008/api`
+Локальный базовый URL: `http://localhost:{APP_PORT}/api` (с настройками примера — `http://localhost:8008/api`). Frontend хранит его отдельно в `quasar_frontend/src/config.js`.
 
-Формат: JSON. Списки ресурсов Laravel — `{ data, links, meta }`.  
+Формат: JSON. Пагинированные коллекции Laravel — `{ data, links, meta }`; список работ комнаты возвращает только `{ data }`.
 Защищённые маршруты: заголовок `Authorization: Bearer <token>`.
 
 Ошибки:
@@ -24,7 +23,7 @@
 | POST | `/register` | `register` | `name`, `email`, `password`, `password_confirmation` | `201` `{ user, token }` |
 | POST | `/login` | `login` | `email`, `password` | `200` `{ user, token }` |
 | POST | `/forgot-password` | `password.email` | `email` | `{ status }` |
-| POST | `/reset-password` | `password.store` | стандартные поля Laravel reset | `{ ... }` |
+| POST | `/reset-password` | `password.store` | `token`, `email`, `password`, `password_confirmation` | `{ status }` |
 
 Авторизован (`auth:sanctum`):
 
@@ -36,6 +35,8 @@
 | POST | `/logout` | `logout` | `{ message: "Logged out" }`, токен удаляется |
 
 Login с неверным паролем — ошибка валидации `LoginRequest`.
+
+`POST /forgot-password` сообщает об отправке, но текущий `ResetPasswordNotification` теряет token конструктора, поэтому ссылка в реальном письме не содержит `token`. Прямой `POST /reset-password` работает, если валидный token получен другим способом.
 
 ---
 
@@ -67,7 +68,7 @@ Login с неверным паролем — ошибка валидации `Lo
 }
 ```
 
-Правила: `name` required, 3…155; `latitude` −90…90; `longitude` −180…180.
+Правила store: `name` required, 3…155; update: required, до 155 символов. Для обоих `latitude` −90…90, `longitude` −180…180.
 
 **ProjectResource:**
 
@@ -91,10 +92,10 @@ Login с неверным паролем — ошибка валидации `Lo
 | Метод | Путь | Примечание |
 |---|---|---|
 | GET | `/v1/project/{project}/rooms` | `updated_at desc`, `per_page` default 10, `sleep(1)`. Authorize проекта нет |
-| POST | `/v1/project/{project}/rooms` | `project_id` обязателен в теле и должен существовать |
+| POST | `/v1/project/{project}/rooms` | `project_id` обязателен в теле и должен существовать; URL-параметр контроллер не использует; `sleep(1)` |
 | GET | `/v1/project/{project}/rooms/{room}` | Policy `view` |
-| PATCH | `/v1/project/{project}/rooms/{room}` | Policy `update` |
-| DELETE | `/v1/project/{project}/rooms/{room}` | `{ message: "Комната удалёна" }` |
+| PATCH/PUT | `/v1/project/{project}/rooms/{room}` | Policy `update`, `sleep(1)` |
+| DELETE | `/v1/project/{project}/rooms/{room}` | `{ message: "Комната удалёна" }`, `sleep(1)` |
 
 **Store body:**
 
@@ -108,6 +109,8 @@ Login с неверным паролем — ошибка валидации `Lo
 ```
 
 `height` required, numeric, 2…5.
+
+Для show/update/delete policy проверяет владельца самой комнаты, но контроллер не сверяет, что `{room}` действительно относится к `{project}` из URL.
 
 **RoomResource:** `id`, `project_id`, `project_name`, `name`, `description`, `height`, `updated_at`.
 
@@ -133,7 +136,7 @@ Login с неверным паролем — ошибка валидации `Lo
 }
 ```
 
-Сервер проставляет `room_id`, `order` (1…n), timestamps и делает `delete` + `insert`.
+Для непустого массива сервер проставляет `room_id`, `order` (1…n), timestamps и делает `delete` + `insert`. `{"walls": []}` возвращает успех, но оставляет старые стены без изменений.
 
 Ответ:
 
@@ -151,7 +154,7 @@ Login с неверным паролем — ошибка валидации `Lo
 
 ### Работы комнаты `v1/room/{room}/roomJob`
 
-`apiResource` внутри префикса `v1/room/{room}`. Реализованы index, store, destroy.
+`apiResource` внутри префикса `v1/room/{room}`. Рабочие действия: index, store, destroy. Маршруты show/update зарегистрированы автоматически, но соответствующих методов в контроллере нет.
 
 | Метод | Путь | Примечание |
 |---|---|---|
@@ -185,6 +188,8 @@ Login с неверным паролем — ошибка валидации `Lo
 | POST | `/v1/room/{room}/roomMaterials` | Пачка (`bulkStore`), имя маршрута `roomMaterials.bulk` |
 | DELETE | `/v1/room/{room}/roomMaterial/{roomMaterial}` | `{ message: "Строительный материал комнаты удален!" }` |
 
+Show/update зарегистрированы `apiResource`, но фактически не реализованы. В одиночном store `room_id` берётся из тела и не сверяется с `{room}`; bulk store, напротив, привязывает все строки к комнате из URL.
+
 **Одна позиция:**
 
 ```json
@@ -210,18 +215,20 @@ Login с неверным паролем — ошибка валидации `Lo
 
 `amount` ≥ 1; `sum` nullable, 0…99999999.99, до 2 знаков.
 
+Request принимает `note`, но модель хранит `notice`: одиночный store отбрасывает `note` через fillable, а bulk store не переносит его в создаваемые строки.
+
 **RoomMaterialResource:** `id`, `room_id`, `material_id`, `room_title`, `material_title`, `amount`, `sum` (int), `notice`.
 
 ### Справочник материалов `v1/material`
 
 | Метод | Путь | Примечание |
 |---|---|---|
-| GET | `/v1/material` | Все материалы, `title asc`, `perPage = 55`. Без ролей |
+| GET | `/v1/material` | Страница материалов, `title asc`, `perPage = 55`. Без ролей |
 | POST | `/v1/material` | `{ success: 1 }`, `201` |
 | GET | `/v1/material/{material}` | Карточка + `images` |
 | DELETE | `/v1/material/{material}` | `{ message: "Материал удалён" }` |
 
-Update пустой.
+Update-маршрут зарегистрирован, но не работает: `UpdateMaterialRequest::authorize()` возвращает `false`, а action пустой.
 
 **Store body (основное):** `title` (3…255), опционально `parent_id`, `description`, `product_url`, `price`, `product_code`, `is_free`, `characteristics` (array), `advantages`, `packaging_info`, `brand`, `producing_country`.
 
@@ -237,11 +244,13 @@ Update пустой.
 | PATCH | `/v1/material_image/{material_image}/to_right` | Сдвиг sort вправо |
 | DELETE | `/v1/material_image/{material_image}` | БД + файл на диске |
 
+Show/update зарегистрированы `apiResource`, но не реализованы (update также запрещён request-классом).
+
 POST успех: `{ success: 1, images: [ ...все картинки материала ] }`, `201`.
 
 Сдвиг без соседа: `400` с сообщением «уже на крайней … позиции».
 
-**MaterialImageResource:** `id`, `parent_id` (у модели поля нет — будет null), `sort`, `name`, `url` вида `{APP_URL}:{APP_PORT}/storage/{name}`.
+**MaterialImageResource:** `id`, `parent_id` (у модели поля нет — будет null), `sort`, `name`, `url` вида `{APP_URL}:{APP_PORT}/storage/{name}`. Чтобы не получить двойной порт, `APP_URL` должен быть без `:port`.
 
 ---
 
@@ -251,7 +260,8 @@ POST успех: `{ success: 1, images: [ ...все картинки матер�
 
 - store не пишет `created`;
 - нет `sleep(1)`;
-- `App\Http\Resources\V2\ProjectResource`.
+- index не задаёт сортировку;
+- `ProjectResource` группирует адрес как `location: { name, lat, lng }` вместо полей `place_name`, `latitude`, `longitude` верхнего уровня.
 
 Фронтенд v2 не использует. Тесты: `tests/Feature/Api/V2/ProjectControllerTest.php`.
 

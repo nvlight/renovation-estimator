@@ -19,7 +19,7 @@ The Vue 3/Quasar SPA is isolated in `quasar_frontend/`. Put screens in `src/page
 
 ## Coding Style & Naming Conventions
 
-Use four spaces for PHP and two spaces for JS, Vue, YAML, and JSON. Follow PSR-4 namespaces and Laravel conventions: singular PascalCase models, `*Controller`, `*Request`, and timestamped snake_case migrations. Vue components and pages use PascalCase filenames; Pinia stores use camelCase. Prettier enforces single quotes, no semicolons, and a 100-character line width.
+Use four spaces for PHP and `docker-compose.yml`; use two for JS, Vue, other YAML, and JSON. Follow PSR-4 namespaces and Laravel conventions: singular PascalCase models, `*Controller`, `*Request`, and timestamped snake_case migrations. Vue components and pages use PascalCase filenames; Pinia stores use camelCase. Prettier enforces single quotes, no semicolons, and a 100-character line width.
 
 ## Testing Guidelines
 

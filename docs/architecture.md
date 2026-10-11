@@ -26,10 +26,10 @@
 
 | Сервис | Образ | Порт хоста (по умолчанию `.env.example`) | Назначение |
 |---|---|---|---|
-| `laravel.test` | `sail-8.4/app` | `APP_PORT` → 80 (`8008`) | PHP-FPM/nginx Laravel |
+| `laravel.test` | `sail-8.4/app` | `APP_PORT` → 80 (`8008`) | `artisan serve` под Supervisor |
 | `pgsql` | `postgres:17` | `FORWARD_DB_PORT` → 5432 (`54329`) | Основная БД |
-| `redis` | `redis:alpine` | `FORWARD_REDIS_PORT` → 6379 (`63794`) | Кэш/очереди (подключён в Compose) |
-| `quasar-node` | `node:22-alpine` | `QUASAR_PORT` → 9000 (`9008`), `QUASAR_NODE` (`3348`) | Dev-сервер Quasar |
+| `redis` | `redis:alpine` | `FORWARD_REDIS_PORT` → 6379 (`63794`) | Доступный Redis-сервис; defaults приложения используют БД |
+| `quasar-node` | `node:22-alpine` | `QUASAR_PORT` → 9000 (`9008`), `QUASAR_NODE` → 3000 (`3348`), `QUASAR_VITEST_UI` → 51204 (`51204`) | Dev-сервер Quasar и Vitest UI |
 
 Quasar стартует командой:
 
@@ -39,7 +39,7 @@ sh -c "npm ci || npm i; npx quasar dev --host 0.0.0.0 --port 9000"
 
 Том: `./quasar_frontend` → `/usr/src/app`. `laravel.test` монтирует весь репозиторий в `/var/www/html`.
 
-Сеть: bridge `sail`. Laravel видит Postgres как хост `pgsql` (`DB_HOST=pgsql` в `.env`).
+Сеть: bridge `sail`. Laravel видит Postgres как `pgsql` (`DB_HOST=pgsql`). В `.env.example` Redis не выбран как cache/queue backend; при его включении внутри Compose нужен `REDIS_HOST=redis`.
 
 ## Слои бэкенда
 
@@ -84,13 +84,13 @@ HTTP → Route (auth:sanctum)
 Laravel Sanctum, **stateless Bearer-токен** (не cookie SPA-сессия).
 
 1. `POST /api/login` или `POST /api/register` → `createToken('auth-token')->plainTextToken`.
-2. Фронт кладёт токен в `localStorage.auth_token`, пользователя — в `localStorage.user`.
+2. Login кладёт токен в `localStorage.auth_token`, пользователя — в `localStorage.user`. Register сохраняет токен, но сейчас не сохраняет `user` в localStorage.
 3. Axios: `Authorization: Bearer <token>` (`stores/auth.js` + `initializeAuth()` на каждом navigation guard).
 4. Logout: `currentAccessToken()->delete()`, чистка localStorage.
 
 Гостевые маршруты: `guest:sanctum`. Защищённые: `auth:sanctum`.
 
-Email-верификация и reset password есть в API и покрыты Pest-тестами, но в SPA-экранах не используются.
+Email-верификация и reset password имеют API endpoints и покрыты Pest-тестами, но в SPA-экранах не используются. Текущий `ResetPasswordNotification` не сохраняет переданный token, поэтому сформированная ссылка сброса нерабочая; тест forgot-password подменяет отправку уведомления и этого не обнаруживает.
 
 Пароль фабричных пользователей — `password` (`UserFactory`).
 
@@ -131,11 +131,11 @@ Email-верификация и reset password есть в API и покрыты
 $request->file('name')->store('materials', 'public')
 ```
 
-Путь в БД: `materials/<filename>`. Публичный URL собирает `MaterialImageResource` из `APP_URL` + `APP_PORT` + `/storage/` + `name`. Нужна команда `sail artisan storage:link`.
+Путь в БД: `materials/<filename>`. Публичный URL собирает `MaterialImageResource` из `APP_URL` + `APP_PORT` + `/storage/` + `name`, поэтому для картинок `APP_URL` должен быть без порта (как в `.env.example`). Это конфликтует с Laravel URL generation на нестандартном host-порту: notification links тогда не содержат `APP_PORT`. Нужна команда `sail artisan storage:link`.
 
 Ограничения загрузки (`StoreMaterialImageRequest`): jpeg/png/jpg/webp, до 5 МБ, размер кадра 250×250 … 1200×925.
 
-При удалении картинки файл снимается с диска.
+При прямом удалении картинки файл снимается с диска. Удаление материала каскадно удаляет строки `material_images`, но `MaterialController` не удаляет соответствующие физические файлы.
 
 ## Версии API
 

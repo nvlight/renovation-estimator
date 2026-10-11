@@ -18,7 +18,7 @@
 
 ## Что умеет приложение
 
-- Регистрация, вход, выход, сброс пароля (Sanctum Bearer-токен).
+- Регистрация, вход и выход в SPA; сброс пароля и верификация email доступны через API (Sanctum Bearer-токен).
 - CRUD проектов: название, описание, место, координаты.
 - CRUD комнат внутри проекта (имя, описание, высота).
 - Редактор стен комнаты: длина (см), угол (°), флаг «настоящая стена / проём».
@@ -50,7 +50,7 @@
 
 ## Быстрый старт
 
-Нужны Docker, PHP 8.4 и Composer (удобно через WSL2 / Linux).
+Нужны Docker, Composer и PHP 8.2+ для первоначального `composer install` (удобно через WSL2 / Linux). Само приложение работает на PHP 8.4 внутри Sail.
 
 ### 1. Зависимости PHP
 
@@ -106,6 +106,8 @@ export const API_CONFIG = {
 
 Если сменили `APP_PORT`, поменяйте и `baseURL`.
 
+Для картинок оставляйте `APP_URL` без порта (`http://localhost`): `MaterialImageResource` сам добавляет `APP_PORT`. У текущей реализации есть обратная сторона — Laravel-generated ссылки в письмах не получают нестандартный порт; сброс пароля также теряет token в notification-классе (см. [известные ограничения](docs/development.md#известные-ограничения)). Redis по умолчанию не используется; при переключении кэша или очереди на Redis задайте `REDIS_HOST=redis`.
+
 ### 3. Контейнеры и Laravel
 
 ```bash
@@ -125,7 +127,7 @@ Quasar поднимается вместе с Compose (`npm ci || npm i`, зат
 - Фронтенд: http://localhost:9008
 - API: http://localhost:8008 (`GET /` вернёт версию Laravel, health — `GET /up`)
 
-После `db:seed` заполняются все таблицы (пользователи, проекты, комнаты, стены, справочник материалов, работы и позиции сметы). Повторный `db:seed` очищает эти таблицы и сеет заново.
+После `db:seed` заполняются бизнес-таблицы (пользователи, проекты, комнаты, стены, справочник материалов, работы и позиции сметы). Повторный `db:seed` очищает эти таблицы и сеет заново.
 
 Войти в UI:
 
@@ -135,7 +137,7 @@ Quasar поднимается вместе с Compose (`npm ci || npm i`, зат
 | `anna@example.com`, `petr@example.com`, `olga@example.com`, `sergey@example.com` | `password` | меньшие сметы |
 | `empty@example.com` | `password` | нет проектов (пустой список) |
 
-Справочник материалов — 36 позиций с витринными названиями (Петрович, Лемана ПРО, OBI). Калькулятор ГКЛ ждёт id **3, 4, 5, 6, 11, 14, 15, 16, 28**.
+Справочник материалов — 36 позиций с витринными названиями (Петрович, Лемана ПРО, OBI). Подключённый калькулятор материалов потолка ГКЛ использует id **3, 4, 5, 11, 14, 15**; черновики материалов стен и натяжного потолка дополнительно ссылаются на **6, 16, 28**.
 
 Дополнительно точечно:
 
@@ -157,16 +159,15 @@ sail artisan test tests/Feature/Api/V1/RoomControllerTest.php
 sail artisan test tests/Feature/Api/V1/RoomControllerTest.php --filter="returns paginated room list"
 ```
 
-Frontend (из контейнера `quasar-node`):
+Frontend (команды выполняются в контейнере `quasar-node`):
 
 ```bash
-docker exec -it $(docker compose ps -q quasar-node) sh
-npm run test:unit
-npm run test:unit -- -t ProjectRoomsPage
-npm run test:unit -- __tests__/rooms/ProjectRoomsPage.test.js
+docker compose exec quasar-node npm run test:unit:ci
+docker compose exec quasar-node npm run test:unit:ci -- -t ProjectRoomsPage
+docker compose exec quasar-node npm run test:unit:ci -- test/vitest/__tests__/rooms/ProjectRoomsPage.test.js
 ```
 
-Каталог `tests/Unit` в корне Laravel нужен phpunit-сьюту (см. `phpunit.xml`). Если его нет — создайте пустой.
+Пустой каталог `tests/Unit` сохранён через `.gitkeep`, потому что он указан как suite в `phpunit.xml`.
 
 ## Структура репозитория
 

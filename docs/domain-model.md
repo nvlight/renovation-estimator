@@ -46,8 +46,8 @@ User 1 ──────── * Project
 | `description` | string, nullable | Описание |
 | `created` | datetime | Дата, выставляется в `now()` при create/update v1 |
 | `place_name` | string, nullable | Населённый пункт / адрес |
-| `latitude` | decimal(10,8) | Широта −90…90 |
-| `longitude` | decimal(11,8) | Долгота −180…180 |
+| `latitude` | decimal(10,8), nullable | Широта −90…90 |
+| `longitude` | decimal(11,8), nullable | Долгота −180…180 |
 
 Пагинация: `Project::PER_PAGE = 10`. Список v1 сортируется по `created desc`.
 
@@ -82,7 +82,7 @@ User 1 ──────── * Project
 
 Валидация пачки: `angle` −180…180, `is_real` 0 или 1, `length` integer.
 
-Сохранение стен — **полная замена**: все старые стены комнаты удаляются, вставляется новый набор (`RoomWallController@store`).
+Сохранение непустого массива стен — **полная замена**: старые стены комнаты удаляются, затем вставляется новый набор (`RoomWallController@store`). Пустой массив не очищает существующие стены.
 
 Ресурс API отдаёт только `length`, `angle`, `is_real` (без `id`/`order`).
 
@@ -111,20 +111,20 @@ Update-метода нет: работа создаётся или удаляе�
 |---|---|---|
 | `parent_id` | unsigned bigint, nullable | Заготовка иерархии, почти не используется |
 | `title` | string | Короткое имя |
-| `description` | string(555) | Длинное описание |
-| `product_code` | unsigned int | Код |
-| `product_url` | string | Ссылка на товар (есть в миграции/request, в Resource не отдаётся) |
-| `price` | decimal(12,2) | Цена |
+| `description` | string(555), nullable | Длинное описание |
+| `product_code` | unsigned int, nullable | Код |
+| `product_url` | string, nullable | Ссылка на товар (есть в миграции/request, в Resource не отдаётся) |
+| `price` | decimal(12,2), nullable | Цена |
 | `is_free` | boolean | Бесплатный. Resource сейчас всегда отдаёт `false` |
-| `characteristics` | jsonb | Объект ключ→значение |
-| `advantages` | json | Массив строк |
-| `packaging_info` | json | Массив строк (единица, вес, габариты…) |
-| `brand` | string(111) | Бренд |
-| `producing_country` | string(111) | Страна |
+| `characteristics` | jsonb, nullable | Объект ключ→значение |
+| `advantages` | json, nullable | Массив строк |
+| `packaging_info` | json, nullable | Массив строк (единица, вес, габариты…) |
+| `brand` | string(111), nullable | Бренд |
+| `producing_country` | string(111), nullable | Страна |
 
 Связь: `hasMany(MaterialImage)` с `orderBy('sort')`.
 
-Калькуляторы ГКЛ/крепежа завязаны на **конкретные id** в справочнике (см. [calculations.md](calculations.md)). `MaterialSeeder` кладёт 36 товаров в порядке id 1…36: профиль 3, направляющий 4, подвес 5, саморезы 6/11/14, дюбели 15/16, лента 28.
+Калькуляторы ГКЛ/крепежа завязаны на **конкретные id** в справочнике (см. [calculations.md](calculations.md)). `MaterialSeeder` кладёт 36 товаров в порядке id 1…36. Подключённый расчёт потолка использует профиль 3, направляющий 4, подвес 5, саморезы 11/14 и дюбель 15; черновые компоненты также ссылаются на 6, 16 и 28.
 
 ## MaterialImage
 
