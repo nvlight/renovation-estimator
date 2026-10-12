@@ -1,15 +1,17 @@
 <template>
   <h6 class="q-mt-md q-mb-md">Подсчет рекомендуемых материалов к покупке</h6>
 
-  <div class="text-subtitle1 font-semibold">Периметр: <span class="text-weight-medium">{{ perimeter }}</span> м.</div>
-  <div class="text-subtitle1 font-semibold">Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }}</span> м.</div>
-  <div class="text-subtitle1 font-semibold">Площадь стен: <span class="text-weight-medium">{{ wallsSquare }}</span> м.</div>
+  <div class="text-subtitle1 font-semibold">
+    Периметр: <span class="text-weight-medium">{{ perimeter }}</span> м.
+  </div>
+  <div class="text-subtitle1 font-semibold">
+    Площадь потолка: <span class="text-weight-medium">{{ ceilSquare }}</span> м.
+  </div>
+  <div class="text-subtitle1 font-semibold">
+    Площадь стен: <span class="text-weight-medium">{{ wallsSquare }}</span> м.
+  </div>
 
   <div>
-
-    <div>isCountingCeil: {{ props.isCountingCeil }}</div>
-    <div>isCountingWalls: {{ props.isCountingWalls }}</div>
-
     <drywall-building-materials-for-ceil
       v-if="props.isCountingCeil"
       :roomId="props.roomId"
@@ -20,14 +22,22 @@
       :isCountingWalls="props.isCountingWalls"
     />
 
-    <!-- тут добавить добавление строительных материалов для стен!! -->
+    <drywall-building-materials-for-walls
+      v-if="props.isCountingWalls"
+      :roomId="props.roomId"
+      :perimeter="perimeter"
+      :wallsSquare="wallsSquare"
+      :walls="walls"
+      :height="props.height"
+      :isCountingWalls="props.isCountingWalls"
+    />
   </div>
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from "vue";
-import DrywallBuildingMaterialsForCeil
-  from "@/components/BuildingMaterialCalcs/DrywallBuildingMaterials/DrywallBuildingMaterialsForCeil.vue";
+import { onMounted, ref, watch } from 'vue'
+import DrywallBuildingMaterialsForCeil from '@/components/BuildingMaterialCalcs/DrywallBuildingMaterials/DrywallBuildingMaterialsForCeil.vue'
+import DrywallBuildingMaterialsForWalls from '@/components/BuildingMaterialCalcs/DrywallBuildingMaterials/DrywallBuildingMaterialsForWalls.vue'
 
 const props = defineProps({
   roomId: {
@@ -46,61 +56,60 @@ const props = defineProps({
     type: Number,
     required: false,
   },
-  walls:{
+  walls: {
     type: Array,
     required: true,
     default: () => [],
   },
-  isCountingCeil:{
-    type: Boolean,
-    required: true
+  height: {
+    type: Number,
+    required: true,
   },
-  isCountingWalls:{
+  isCountingCeil: {
     type: Boolean,
-    required: true
+    required: true,
   },
-});
+  isCountingWalls: {
+    type: Boolean,
+    required: true,
+  },
+})
 
 const perimeter = ref(props.perimeter)
-const ceilSquare = ref(props.ceilSquare);
-const wallsSquare = ref(props.wallsSquare);
-const walls = ref(props.walls);
+const ceilSquare = ref(props.ceilSquare)
+const wallsSquare = ref(props.wallsSquare)
+const walls = ref(props.walls)
 
 watch(
   () => props.perimeter,
   (nv) => {
-    perimeter.value = nv;
+    perimeter.value = nv
   },
-  {immediate: true,}
-);
+  { immediate: true },
+)
 watch(
   () => props.ceilSquare,
   (nv) => {
-    ceilSquare.value = nv;
+    ceilSquare.value = nv
   },
-  {immediate: true}
-);
+  { immediate: true },
+)
 watch(
   () => props.wallsSquare,
   (nv) => {
-    wallsSquare.value = nv;
+    wallsSquare.value = nv
   },
-  {immediate: true}
-);
+  { immediate: true },
+)
 watch(
   () => props.walls,
   (nv) => {
-    walls.value = nv;
+    walls.value = nv
   },
-  {immediate: true}
-);
+  { immediate: true },
+)
 
-
-onMounted(() => {
-
-});
+onMounted(() => {})
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

@@ -84,6 +84,7 @@
       :ceilSquare="ceilSquare"
       :wallsSquare="improvedWallsSquare"
       :walls="etalonWalls"
+      :height="roomHeight"
       :isCountingCeil="counting.ceil"
       :isCountingWalls="counting.walls"
     />

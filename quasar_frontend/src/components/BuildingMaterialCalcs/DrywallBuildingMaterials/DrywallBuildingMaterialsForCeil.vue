@@ -23,31 +23,31 @@
     <div class="q-mt-md">Шаги материалов</div>
     <div class="row" style="gap: 5px;">
       <div>
-        <q-input filled v-model="materialsInputs.wood.value" label="деревянные саморезы" name="step_wood"/>
+        <q-input filled v-model.number="materialsInputs.wood.value" type="number" min="0" step="0.01" label="деревянные саморезы" name="step_wood" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.metal.value" label="Металлические саморезы" name="step_metal"/>
+        <q-input filled v-model.number="materialsInputs.metal.value" type="number" min="0" step="0.01" label="Металлические саморезы" name="step_metal" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.dowel4.value" label="Дюбель гвозди 4 см" name="step_dowel4"/>
+        <q-input filled v-model.number="materialsInputs.dowel4.value" type="number" min="0" step="0.01" label="Дюбель гвозди 4 см" name="step_dowel4" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.dowel6.value" label="Дюбель гвозди 6 см" name="step_dowel6"/>
+        <q-input filled v-model.number="materialsInputs.dowel6.value" type="number" min="0" step="0.01" label="Дюбель гвозди 6 см" name="step_dowel6" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.ceilingRunnerProfileLength.value" label="Длина направляющего профиля" name="step_ceilingRunnerProfileLength"/>
+        <q-input filled v-model.number="materialsInputs.ceilingRunnerProfileLength.value" type="number" min="0" step="0.01" label="Длина направляющего профиля" name="step_ceilingRunnerProfileLength" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.ceilingRunnerProfileJointLength.value" label="Длина стыка направляющего профиля" name="step_ceilingRunnerProfileJointLength"/>
+        <q-input filled v-model.number="materialsInputs.ceilingRunnerProfileJointLength.value" type="number" min="0" step="0.01" label="Длина стыка направляющего профиля" name="step_ceilingRunnerProfileJointLength" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.ceilingProfileLength.value" label="Длина профиля" name="step_ceilingProfileLength"/>
+        <q-input filled v-model.number="materialsInputs.ceilingProfileLength.value" type="number" min="0" step="0.01" label="Длина профиля" name="step_ceilingProfileLength" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.ceilProfileMountedStep.value" label="Шаг профиля" name="step_ceilProfileMountedStep"/>
+        <q-input filled v-model.number="materialsInputs.ceilProfileMountedStep.value" type="number" min="0" step="0.01" label="Шаг профиля" name="step_ceilProfileMountedStep" />
       </div>
       <div>
-        <q-input filled v-model="materialsInputs.ceilProfileSuspensionsStep.value" label="Шаг подвеса" name="step_ceilProfileSuspensionsStep"/>
+        <q-input filled v-model.number="materialsInputs.ceilProfileSuspensionsStep.value" type="number" min="0" step="0.01" label="Шаг подвеса" name="step_ceilProfileSuspensionsStep" />
       </div>
 
     </div>
@@ -151,11 +151,11 @@ const materialsInputs = ref({
     value: 0.21,
   },
   dowel4: {
-    id: 1, // 15 - дюбель гвоздь, 4 см.
+    id: 15, // 15 - дюбель гвоздь, 4 см.
     value: 0.4,
   },
   dowel6: {
-    id: 1, // 16 - дюбель гвоздь, 4 см.
+    id: 16, // 16 - дюбель гвоздь, 6 см.
     value: 0.39,
   },
   ceilingRunnerProfileLength: {
@@ -272,7 +272,7 @@ const ceilRunnerProfileCalc = computed( () => {
   const jointAmount = jointLength / materialsInputs.value.ceilingRunnerProfileLength.value;
 
   const amount2 = +(Math.ceil(amount + jointAmount).toFixed(2));
-  const meters = amount2 * materialsInputs.value.ceilingProfileLength.value;
+  const meters = amount2 * materialsInputs.value.ceilingRunnerProfileLength.value;
 
   return {amount: amount2, meters,};
 });
@@ -280,9 +280,13 @@ const ceilRunnerProfileCalc = computed( () => {
 // ^ количество и тип материалов к покупке
 // материалы для направляющего профиля (проход по периметру)
 const ceilMaterials1 = computed( () => {
+  const runnerProfileMeters = ceilRunnerProfileCalc.value.amount * materialsInputs.value.ceilingRunnerProfileLength.value;
+
   return {
-    15: Math.ceil((ceilRunnerProfileCalc.value.amount * materialsInputs.value.ceilingRunnerProfileLength.value) / materialsInputs.value.dowel4),
-    11: Math.ceil((ceilRunnerProfileCalc.value.amount * materialsInputs.value.ceilingRunnerProfileLength.value) / materialsInputs.value.wood.value),
+    15: Math.ceil(runnerProfileMeters / materialsInputs.value.dowel4.value),
+    16: Math.ceil(runnerProfileMeters / materialsInputs.value.dowel6.value),
+    11: Math.ceil(runnerProfileMeters / materialsInputs.value.wood.value),
+    6: Math.ceil(runnerProfileMeters / materialsInputs.value.metal.value),
     4: ceilRunnerProfileCalc.value.amount,
   }
 });
@@ -320,6 +324,11 @@ const ceilMaterials = computed(() => {
     const val2 = materials2[key] || 0;
     result[key] = val1 + val2;
   });
+
+  const drywallSheetsAmount = Math.ceil(Number(ceilSquare.value || 0) / 3);
+  if (drywallSheetsAmount > 0) {
+    result[1] = drywallSheetsAmount;
+  }
 
   return result;
 });
