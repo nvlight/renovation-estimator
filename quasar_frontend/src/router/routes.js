@@ -12,36 +12,37 @@ const routes = [
         path: 'login',
         name: 'Login',
         component: () => import('@/pages/LoginPage.vue'),
-        meta: { requiresGuest: true }, // Только для не аутентифицированных
+        meta: { requiresGuest: true, menuSection: 'login' }, // Только для не аутентифицированных
       },
       {
         path: 'register',
         name: 'Register',
         component: () => import('@/pages/RegisterPage.vue'),
-        meta: { requiresGuest: true }, // Только для не аутентифицированных
+        meta: { requiresGuest: true, menuSection: 'register' }, // Только для не аутентифицированных
       },
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/pages/DashboardPage.vue'),
-        meta: { requiresAuth: true }, // Только для аутентифицированных
+        meta: { requiresAuth: true, menuSection: 'dashboard' }, // Только для аутентифицированных
       },
       {
         path: 'projects',
         name: 'Projects',
         component: () => import('@/pages/ProjectsPage.vue'),
-        meta: { requiresAuth: true }, // Только для аутентифицированных
+        meta: { requiresAuth: true, menuSection: 'projects' }, // Только для аутентифицированных
       },
       {
         path: 'projects/:projectId/rooms',
         name: 'ProjectRooms',
         component: () => import('@/pages/RoomsPage.vue'),
-        meta: { requiresAuth: true },
-      },{
+        meta: { requiresAuth: true, menuSection: 'projects' },
+      },
+      {
         path: 'projects/:projectId/rooms/:roomId/specifications',
         name: 'RoomSpecifications',
         component: () => import('@/pages/RoomSpecifications.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, menuSection: 'projects' },
       },
       {
         path: 'test-css',
@@ -59,16 +60,16 @@ const routes = [
         path: 'materials',
         name: 'Materials',
         component: () => import('@/pages/MaterialsPage.vue'),
-        meta: { requiresAuth: true }, // Только для аутентифицированных
+        meta: { requiresAuth: true, menuSection: 'materials' }, // Только для аутентифицированных
       },
       // Новый отдельный роут для деталей (независимый, без children)
       {
         path: 'material/:material_id', // Полный путь: /material/123 (не /materials/123)
         name: 'MaterialDetail',
         component: () => import('@/pages/MaterialView.vue'), // Ваш компонент
-        meta: { requiresAuth: true }, // Аутентификация
-        props: true // Передаёт material_id как пропс в компонент
-      }
+        meta: { requiresAuth: true, menuSection: 'materials' }, // Аутентификация
+        props: true, // Передаёт material_id как пропс в компонент
+      },
     ],
   },
 
@@ -77,6 +78,6 @@ const routes = [
     path: '/:catchAll(.*)*',
     component: () => import('@/pages/ErrorNotFound.vue'),
   },
-];
+]
 
-export default routes;
+export default routes

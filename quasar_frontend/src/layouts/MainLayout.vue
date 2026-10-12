@@ -2,40 +2,39 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title>
-          Renovation estimator
-        </q-toolbar-title>
+        <q-toolbar-title> Renovation estimator </q-toolbar-title>
 
         <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
+        <q-item-label header> Навигация </q-item-label>
 
         <EssentialLink
           v-for="link in linksList"
           :key="link.title"
-          v-bind="link"
+          :title="link.title"
+          :icon="link.icon"
+          :to="link.to"
+          :active="route.meta.menuSection === link.section"
+          @select="closeDrawerOnMobile"
         />
+
+        <template v-if="authStore.isAuthenticated">
+          <q-separator spaced />
+          <q-item clickable :disable="logoutPending" data-testid="logout" @click="onLogout">
+            <q-item-section avatar>
+              <q-icon name="logout" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Выйти</q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
       </q-list>
     </q-drawer>
 
@@ -46,57 +45,77 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import { computed, ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import EssentialLink from '@/components/EssentialLink.vue'
+import { useAuthStore } from '@/stores/auth'
 
-const linksList = [
+const authenticatedLinks = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: 'Панель',
+    icon: 'dashboard',
+    to: { name: 'Dashboard' },
+    section: 'dashboard',
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: 'Проекты',
+    icon: 'folder',
+    to: { name: 'Projects' },
+    section: 'projects',
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
+    title: 'Строительные материалы',
+    icon: 'inventory_2',
+    to: { name: 'Materials' },
+    section: 'materials',
   },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
 ]
 
-const leftDrawerOpen = ref(false)
+const guestLinks = [
+  {
+    title: 'Войти',
+    icon: 'login',
+    to: { name: 'Login' },
+    section: 'login',
+  },
+  {
+    title: 'Регистрация',
+    icon: 'person_add',
+    to: { name: 'Register' },
+    section: 'register',
+  },
+]
 
-function toggleLeftDrawer () {
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const leftDrawerOpen = ref(false)
+const logoutPending = ref(false)
+const linksList = computed(() => (authStore.isAuthenticated ? authenticatedLinks : guestLinks))
+
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+function closeDrawerOnMobile() {
+  if ($q.screen.lt.md) {
+    leftDrawerOpen.value = false
+  }
+}
+
+async function onLogout() {
+  logoutPending.value = true
+
+  try {
+    await authStore.logout()
+    closeDrawerOnMobile()
+    await router.push({ name: 'Login' })
+  } catch (error) {
+    console.error('Logout failed:', error)
+  } finally {
+    logoutPending.value = false
+  }
 }
 </script>
