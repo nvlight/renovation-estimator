@@ -56,7 +56,7 @@ sail artisan migrate:fresh --seed
 2. `ProjectSeeder` — 22 проекта, привязка по email (у демо 12 — вторая страница пагинации).
 3. `RoomSeeder` — ~47 комнат с русскими именами.
 4. `RoomWallSeeder` — замкнутые контуры: прямоугольник, проём (`is_real = 0`), Г-образная, коридор, пятиугольник; часть комнат без стен.
-5. `MaterialSeeder` — 36 товаров из `Support/MaterialCatalog.php` (id 1…36). Подключённый калькулятор потолка ГКЛ использует **3, 4, 5, 11, 14, 15**; черновые компоненты также ссылаются на **6, 16, 28**. У 10 товаров — плейсхолдеры из `database/seeders/fixtures/materials/` (у id 1 и 3 по три кадра, всего 14 изображений).
+5. `MaterialSeeder` — 37 товаров из `Support/MaterialCatalog.php` (id 1…37). Калькуляторы ГКЛ используют **1, 3, 4, 5, 6, 11, 14, 15, 16**. У 11 товаров есть изображения из `database/seeders/fixtures/materials/` (у id 1 и 3 по три кадра, всего 15 изображений).
 6. `RoomJobsSeeder` — `more_info` как массив `{name, amount, price, sum}` (натяжной / ГКЛ).
 7. `RoomMaterialSeeder` — живые FK, `sum` с учётом фасовки `N шт` в title.
 
