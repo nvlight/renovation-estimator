@@ -54,9 +54,9 @@ describe('DrywallBuildingMaterials', () => {
       wallsSquare: 27,
       walls: roomWalls,
       height: 2.7,
-      isCountingWalls: true,
     })
     expect(wallCalculator.props()).not.toHaveProperty('ceilSquare')
+    expect(wallCalculator.props()).not.toHaveProperty('isCountingWalls')
 
     await wrapper.setProps({ isCountingWalls: false })
 
@@ -96,7 +96,6 @@ describe('DrywallBuildingMaterialsForWalls', () => {
         wallsSquare: 27,
         walls: roomWalls,
         height: 2.7,
-        isCountingWalls: true,
       },
       global: {
         plugins: [pinia],
@@ -170,6 +169,17 @@ describe('DrywallBuildingMaterialsForWalls', () => {
     })
   })
 
+  it('shows an error notification when a material cannot be added', async () => {
+    roomMaterialsStore.addItem.mockResolvedValue({ status: 422 })
+
+    await wrapper.vm.addMaterial(wrapper.vm.rows[0])
+
+    expect(Notify.create).toHaveBeenCalledWith({
+      type: 'negative',
+      message: 'Не удалось добавить строительные материалы.',
+    })
+  })
+
   it('adds all calculated wall materials to the room estimate', async () => {
     roomMaterialsStore.addItems.mockResolvedValue({ status: 201 })
 
@@ -205,6 +215,7 @@ describe('DrywallBuildingMaterialsForCeil', () => {
   it('uses nine reactive numeric material inputs and rounds drywall sheets up', async () => {
     const pinia = createTestingPinia({ createSpy: vi.fn })
     const materialsStore = useMaterialsStore(pinia)
+    const roomMaterialsStore = useRoomMaterialsStore(pinia)
 
     materialsStore.items = [
       { id: 1, title: 'Лист гипсокартона', price: 500 },
@@ -225,8 +236,6 @@ describe('DrywallBuildingMaterialsForCeil', () => {
         perimeter: 10,
         ceilSquare: 7,
         walls: roomWalls,
-        isCountingCeil: true,
-        isCountingWalls: true,
       },
       global: {
         plugins: [pinia],
@@ -245,6 +254,8 @@ describe('DrywallBuildingMaterialsForCeil', () => {
     expect(wrapper.vm.rows.some((row) => row.id === 6)).toBe(true)
     expect(wrapper.vm.rows.some((row) => row.id === 16)).toBe(true)
     expect(wrapper.vm.rows.find((row) => row.id === 1)?.amount).toBe(3)
+    expect(wrapper.text()).not.toContain('Id материалов')
+    expect(wrapper.text()).not.toContain('Наибольшая длина стен')
 
     const previousTotal = wrapper.vm.allMaterialsSum
     const woodPrice = wrapper.vm.rows.find((row) => row.id === 11).price
@@ -252,5 +263,34 @@ describe('DrywallBuildingMaterialsForCeil', () => {
 
     expect(wrapper.vm.rows.find((row) => row.id === 11).price).toBe(woodPrice)
     expect(wrapper.vm.allMaterialsSum).not.toBe(previousTotal)
+
+    await wrapper.find('input[name="step_ceilingRunnerProfileLength"]').setValue(0)
+    await wrapper.find('input[name="step_ceilingProfileLength"]').setValue(0)
+
+    expect(wrapper.vm.rows.every((row) => Number.isFinite(row.amount))).toBe(true)
+    expect(wrapper.vm.rows.every((row) => row.amount >= 1)).toBe(true)
+
+    roomMaterialsStore.addItems.mockResolvedValue({ status: 201 })
+
+    const addAllButton = wrapper
+      .findAllComponents({ name: 'QBtn' })
+      .find((button) => button.props('label') === 'Добавить все материалы (потолок)')
+
+    await addAllButton.trigger('click')
+    await flushPromises()
+
+    const payload = roomMaterialsStore.addItems.mock.calls[0][1]
+    expect(roomMaterialsStore.addItems).toHaveBeenCalledWith(31, {
+      materials: wrapper.vm.rows.map((row) => ({
+        material_id: row.id,
+        amount: row.amount,
+        sum: row.sum,
+      })),
+    })
+    expect(payload.materials.every((material) => !('room_id' in material))).toBe(true)
+    expect(Notify.create).toHaveBeenCalledWith({
+      type: 'positive',
+      message: 'Все строительные материалы для потолка добавлены!',
+    })
   })
 })

@@ -141,7 +141,11 @@ components/
     DrywallBuildingMaterials/
       DrywallBuildingMaterials.vue          # обёртка
       DrywallBuildingMaterialsForCeil.vue   # нормы ГКЛ потолка
-      DrywallBuildingMaterialsForWalls.vue  # черновик стен
+      DrywallBuildingMaterialsForWalls.vue  # нормы ГКЛ стен
+      DrywallMaterialInputs.vue             # общие параметры материалов
+      DrywallMaterialsTable.vue             # общая таблица рекомендаций
+      useDrywallMaterials.js                # строки, стоимость и добавление
+      drywallMaterials.js                   # общие чистые расчёты
   RoomJobs.vue
   RoomMaterials.vue
 ```
@@ -150,7 +154,9 @@ components/
 
 «Добавить работу» пишет `RoomJob` через store.
 
-Рекомендуемые материалы потолка ГКЛ — таблица с кнопкой «+» по строке и «Добавить все материалы (потолок)» → `POST .../roomMaterials`.
+Рекомендуемые материалы потолка и стен ГКЛ используют общую таблицу с кнопкой «+» по строке и
+массовым добавлением через `POST .../roomMaterials`. Формулы количества остаются раздельными в
+компонентах потолка и стен.
 
 `RoomMaterials` умеет ручной поиск по справочнику, выбор, количество, сумма, добавление одной позиции и таблицу уже добавленных с удалением.
 
