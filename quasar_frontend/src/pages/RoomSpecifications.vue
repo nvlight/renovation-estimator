@@ -290,7 +290,7 @@
                 <drywall-calc :room-id="roomId" :walls="walls" :height="Number(roomHeight)"/>
               </q-tab-panel>
               <q-tab-panel name="putty">
-                <div class="text-h6">Шпатлевка</div>
+                <putty-calc :room-id="roomId" :walls="walls" :height="Number(roomHeight)"/>
               </q-tab-panel>
             </q-tab-panels>
           </q-card>
@@ -340,6 +340,7 @@ import {useRoomJobsStore} from "@/stores/roomJobs.js";
 import RoomMaterials from "@/components/RoomMaterials.vue";
 import {useRoomMaterialsStore} from "@/stores/roomMaterials.js";
 import DrywallCalc from "@/components/JobTypesCalcs/DrywallCalc.vue";
+import PuttyCalc from "@/components/JobTypesCalcs/PuttyCalc.vue";
 import {useMaterialsStore} from "@/stores/materials.js";
 
 //const router = userRouter;
